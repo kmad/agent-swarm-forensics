@@ -1,0 +1,62 @@
+[
+  {
+    "code": "us-ma-005",
+    "offerings": 1,
+    "usd": 123660,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-009",
+    "offerings": 2,
+    "usd": 65170,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-011",
+    "offerings": 1,
+    "usd": 22200,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-013",
+    "offerings": 2,
+    "usd": 24300,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-017",
+    "offerings": 10,
+    "usd": 1418140,
+    "color_code": 3
+  },
+  {
+    "code": "us-ma-021",
+    "offerings": 1,
+    "usd": 107000,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-023",
+    "offerings": 3,
+    "usd": 223300,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-025",
+    "offerings": 11,
+    "usd": 2540000,
+    "color_code": 4
+  },
+  {
+    "code": "us-ma-760",
+    "offerings": 1,
+    "usd": 14300,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-027",
+    "offerings": 2,
+    "usd": 52500,
+    "color_code": 1
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "code": "us-ma-001",
+    "offerings": 2,
+    "usd": 732088.118791579,
+    "color_code": 3
+  },
+  {
+    "code": "us-ma-009",
+    "offerings": 2,
+    "usd": 107811.2833201884,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-013",
+    "offerings": 1,
+    "usd": 15399.9999165534,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-015",
+    "offerings": 1,
+    "usd": 50000.000745057994,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-017",
+    "offerings": 13,
+    "usd": 3942526.530474411,
+    "color_code": 4
+  },
+  {
+    "code": "us-ma-021",
+    "offerings": 5,
+    "usd": 752266.2598639721,
+    "color_code": 3
+  },
+  {
+    "code": "us-ma-023",
+    "offerings": 3,
+    "usd": 160820.00546157348,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-025",
+    "offerings": 11,
+    "usd": 5377552.250400165,
+    "color_code": 4
+  },
+  {
+    "code": "us-ma-027",
+    "offerings": 1,
+    "usd": 256461.322307586,
+    "color_code": 2
+  }
+]

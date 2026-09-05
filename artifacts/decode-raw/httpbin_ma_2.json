@@ -1,0 +1,38 @@
+[
+  {
+    "code": "us-ma-005",
+    "offerings": 1,
+    "usd": 48600,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-009",
+    "offerings": 3,
+    "usd": 143800,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-013",
+    "offerings": 1,
+    "usd": 80700,
+    "color_code": 1
+  },
+  {
+    "code": "us-ma-017",
+    "offerings": 6,
+    "usd": 381150,
+    "color_code": 2
+  },
+  {
+    "code": "us-ma-021",
+    "offerings": 4,
+    "usd": 708300,
+    "color_code": 3
+  },
+  {
+    "code": "us-ma-025",
+    "offerings": 11,
+    "usd": 749960,
+    "color_code": 3
+  }
+]

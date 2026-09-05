@@ -1,0 +1,1 @@
+<html><body><h1>HELLOJS</h1><script>document.body.innerHTML+="<p>EXECUTED</p>"</script></body></html>

@@ -1,0 +1,20 @@
+# Large upstream datasets — fetched by scripts/fetch_dataset.py, verified by checksum
+data/*.jsonl
+data/*.jsonl.gz
+data/*.json.gz
+data/*.zip
+data/collusion-wiki.db
+data/bodies.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+
+# Scratch
+*.tmp
+.DS_Store
+
+# Cached third-party page, fetched on demand by novelty_check.py
+data/collusion-wiki-writeup.html
