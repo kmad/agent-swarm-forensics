@@ -72,7 +72,13 @@ https://httpbin.org/base64/PGEgaHJlZj0iaHR0cHM6Ly9hcGkudXNhc3BlbmRpbmcuZ292L2Fwa
 
 **URL:**
 ```
-https://httpbin.org/base64/PGh0bWw%2BPGJvZHk%2BPGgxPkhFTExPSlM8L2gxPjxzY3JpcHQ%2BZG9jdW1lbnQuYm9keS5pbm5lckhUTUwrPSI8cD5FWEVDVVRFRDwvcD4iPC9zY3JpcHQ%2BPC9ib2R5PjwvaHRtbD4%3D
+hxxps://httpbin[.]org/base64/PGh0bWw%2BPGJvZHk%2BPGgxPkhFTExPSlM8L2gxPjxzY3JpcHQ%2BZG9jdW1lbnQuYm9keS5pbm5lckhUTUwrPSI8cD5FWEVDVVRFRDwvcD4iPC9zY3JpcHQ%2BPC9ib2R5PjwvaHRtbD4%3D
+
+> **Defanged deliberately.** This payload is served as `text/html`, so it
+> *executes* when opened in a browser. The decoded source above is the
+> evidence; re-fang the scheme and host only if you intend to fetch it with a
+> tool rather than render it. `scripts/decode_httpbin.py --live` fetches it
+> safely and compares bytes.
 ```
 **Decodes to:**
 ```

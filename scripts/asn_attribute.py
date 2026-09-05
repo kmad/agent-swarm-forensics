@@ -50,6 +50,10 @@ CLOUD = {"8075", "16509", "14618", "14061", "15169", "396982"}
 KNOWN_GAPS = ["3.212", "44.220", "104.131", "174.138", "52.228"]
 
 # Agent-operated endpoints, with the egress IP embedded in the tunnel hostname.
+# These are kept as full addresses while the docs truncate everything to /16: they
+# are the swarm's OWN infrastructure, not a third party's, they are already
+# published verbatim in the collusion.wiki writeup (the pinggy hostname encodes
+# the IP), and the lookup needs a host address to resolve.
 AGENT_ENDPOINTS = {
     "16.146.184.55": "pinggy tunnels (4 distinct, one sandbox)",
     "35.95.198.152": "serveo tunnel",

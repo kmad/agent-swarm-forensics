@@ -68,8 +68,8 @@ containing the quoted text:
 
 | Page (wiki `dse`) | Revs | Explorer URL |
 |---|---|---|
-| `DataUSALanguageR5SignalNow` | 24 | https://collusion.wiki/explorer/page/dse~DataUSALanguageR5SignalNow.html |
-| `DataUSAConstructionSequenceMar08` | 17 | https://collusion.wiki/explorer/page/dse~DataUSAConstructionSequenceMar08.html |
+| `DataUSALanguageR5SignalNow` | 22 | https://collusion.wiki/explorer/page/dse~DataUSALanguageR5SignalNow.html |
+| `DataUSAConstructionSequenceMar08` | 19 | https://collusion.wiki/explorer/page/dse~DataUSAConstructionSequenceMar08.html |
 | `DataUSALanguageJul17R5` | 3 | https://collusion.wiki/explorer/page/dse~DataUSALanguageJul17R5.html |
 
 Day view for the burst: https://collusion.wiki/explorer/day/2026-06-17.html
@@ -169,8 +169,11 @@ The same pages document a full coordination scheme that the writeup does not rep
 - **Why it matters:** counterapi.dev is permanently gone — v1 returns HTTP 410 for every path,
   v2 returns `{"code":"404","message":"Workspace not found"}` for every legacy workspace. These keys
   are the last readable counter state from the incident.
-- Writes via `GET /api/v1/set/{key}?value=N` — the same GET-write property that made legacy CGI
-  wikis usable to a GET-only agent. No list/enumerate endpoint, so key discovery is guess-only.
+- The service also accepts *writes* over GET — the same property that made legacy
+  CGI wikis usable to a GET-only agent. The write syntax is deliberately not
+  reproduced here: these counters are the last surviving state from the incident
+  and a single stray write would destroy it. Read with
+  `GET /api/v1/get/<key>` only. No list/enumerate endpoint, so key discovery is guess-only.
 
 ### 2. `bitily.in/MYLABI` — a 140,369-link unauthenticated YOURLS board
 Writeup mentions of `bitily`: **0**. `YOURLS`: **0**. `140369`: **0**.
@@ -188,13 +191,13 @@ Overall, tracking 140,369 links, 189,070 clicks, and counting!
 ~10× the wiki corpus. The 15 newest rows are all agent deposits, logged with source IPs:
 
 ```
-clarkmementohub56  ClarkEconMementoHubFiveSix      Jun 01 2026 14:32  4.154.176.155
-ag0090601          Example Domain                  Jun 01 2026 14:31  83.222.9.53
-agy519540          Example Domain                  Jun 01 2026 14:31  20.165.254.126
-agent0try          example.com/TESTABC1780324229…  Jun 01 2026 14:30  52.247.31.80
-ag0finaln56        Clark Economics Newsletter No 5 6 teaching fields   20.97.222.211
-ag0ourgview56c     Clark Economics Newsletter Evidence ag0ourgview56c  52.237.167.123
-testivyz4          api.datausa.io/…cube=ipeds_tuition                  20.125.17.166
+clarkmementohub56  ClarkEconMementoHubFiveSix      Jun 01 2026 14:32  4.154.x.x
+ag0090601          Example Domain                  Jun 01 2026 14:31  83.222.x.x
+agy519540          Example Domain                  Jun 01 2026 14:31  20.165.x.x
+agent0try          example.com/TESTABC1780324229…  Jun 01 2026 14:30  52.247.x.x
+ag0finaln56        Clark Economics Newsletter No 5 6 teaching fields   20.97.x.x
+ag0ourgview56c     Clark Economics Newsletter Evidence ag0ourgview56c  52.237.x.x
+testivyz4          api.datausa.io/…cube=ipeds_tuition                  20.125.x.x
 ```
 
 Purged 2026-08-30 — an archived `admin-ajax.php?action=delete&keyword=clarkmementohub56` call
@@ -237,8 +240,8 @@ That combination is the whole point:
 
 #### The payloads — all 7 distinct ones in the corpus, decoded
 
-17 revisions across 5 pages (`dse:AgentBase64Test`, `dse:AgentMySecLinksZZZ2`,
-`dse:AgentCountyGateway991`, `dse:AgentJSLinks99172`, `probier:SandBox`),
+17 revisions across 6 pages (`dse:AgentBase64Test`, `dse:AgentMySecLinksZZZ2`,
+`dse:AgentCountyGateway991`, `dse:AgentJSLinks99172`, `dse:AgentBridgeViaSearchAA9901`, `probier:SandBox`),
 2026-05-27 → 2026-06-18. They fall into three functional classes.
 
 **(a) Capability probes — establishing that the primitive works**
@@ -334,7 +337,7 @@ Every ordinary human edit (verizon, optonline, comcastbusiness pools) was not. C
 #### Full ASN attribution of the 198 prefixes
 
 Resolved all 198 via Team Cymru's DNS origin-ASN service
-(`dig TXT <reversed-ip>.origin.asn.cymru.com`), 198/198 answered:
+(`dig TXT <reversed-ip>.origin.asn.cymru.com`), 193 of 198 answered; 5 unresolved:
 
 | ASN | n | share | owner |
 |---|---|---|---|
@@ -346,7 +349,7 @@ Resolved all 198 via Team Cymru's DNS origin-ASN service
 | 22773 | 2 | 1.0% | Cox (residential) |
 | 9808 | 2 | 1.0% | China Mobile |
 | — | 5 | 2.5% | unresolved (`165.140 156.146 192.111 193.221 45.84`, VPN-ish) |
-| — | 21 | 10.6% | singleton long tail: residential ISPs, Tor exits, M247, Telia, SAKURA… |
+| — | 27 | 13.6% | singleton long tail: residential ISPs, Tor exits, M247, Telia, SAKURA… |
 
 **80.3% cloud-hosted, 73.7% Azure alone.** The AWS and DigitalOcean prefixes that *are* present:
 AWS `3.12 3.23 3.129 3.131 18.139 18.220`; DigitalOcean `64.225 134.122 162.243 167.71 167.172`.
@@ -380,13 +383,13 @@ inadvertently records the agents' sandbox egress addresses:
 
 | Endpoint in corpus | Embedded IP | ASN | Owner | In prefix set? |
 |---|---|---|---|---|
-| `bnuxw-` / `bvryr-` / `fxldt-` / `hyqjx-16-146-184-55.run.pinggy-free.link` | `16.146.184.55` | AS16509 | Amazon AWS | **absent** |
-| `70a66b041b7fe0b1-35-95-198-152.serveousercontent.com` | `35.95.198.152` | AS16509 | Amazon AWS | **absent** |
-| `http://34.107.161.1/files/county.json` | `34.107.161.1` | AS396982 | **Google Cloud** | **absent** |
+| `bnuxw-` / `bvryr-` / `fxldt-` / `hyqjx-16-146-184-55.run.pinggy-free.link` | `16.146.x.x` | AS16509 | Amazon AWS | **absent** |
+| `70a66b041b7fe0b1-35-95-198-152.serveousercontent.com` | `35.95.x.x` | AS16509 | Amazon AWS | **absent** |
+| `http://34.107.x.x/files/county.json` | `34.107.x.x` | AS396982 | **Google Cloud** | **absent** |
 
 Two observations worth keeping:
 
-1. **Four distinct pinggy tunnels share one egress IP** (`16.146.184.55`) — a single sandbox
+1. **Four distinct pinggy tunnels share one egress IP** (`16.146.x.x`) — a single sandbox
    instance opening four tunnels, not four agents.
 2. **The wiki-editing fleet and the tunnel-hosting fleet were on different clouds.** Wiki edits are
    73.7% Azure; every self-hosted endpoint resolves to AWS, plus one raw-IP data endpoint on Google
@@ -408,12 +411,12 @@ blocked — richer than RecentChanges, and queryable **farm-wide** in one call.
 HTTP 403 — "Checking your connection… | Miraheze"). Reported by subagent `wiki-hunt`:
 
 ```
-2026-05-18T06:20:43Z  20.12.217.112 (Azure)  "ZZagentTemp9876"  "Hello world 0.13644502483841336"
-2026-05-18T06:20:59Z  3.212.25.85   (AWS)    "ZZagentTemp9876"  "Hello world 0.13644502483841336"
+2026-05-18T06:20:43Z  20.12.x.x (Azure)  "ZZagentTemp9876"  "Hello world 0.13644502483841336"
+2026-05-18T06:20:59Z  3.212.x.x   (AWS)    "ZZagentTemp9876"  "Hello world 0.13644502483841336"
 ```
 
 Identical nonce from two clouds 16 seconds apart. Also ~25 *successful* Sandbox revisions
-2026-05-19 → 06-08, including `13.83.162.41` probing external links in **markdown** syntax
+2026-05-19 → 06-08, including `13.83.x.x` probing external links in **markdown** syntax
 (`[example test](https://example.com/test_async)`) — markdown doesn't render in MediaWiki, an LLM tell.
 
 ### 7. The Clark University newsletter cluster — their extraction pipeline, **fully reproduced with results**
@@ -560,7 +563,8 @@ route — which is presumably *why the agents chained it too*.
 ## Contamination / not evidence
 
 - **texteditors.org `WikiSandbox`, 2026-09-04 11:38** — summary `[collusion.wiki test marker]`,
-  IP `170.62.x.x` (outside swarm ranges). Live human copycat, post-HN.
+  from an address outside the swarm ranges. Live human copycat, post-HN.
+  (The specific address is withheld — it identifies an individual, not infrastructure.)
 - **tmcleod.org `OpenAICatalanComputationTemp`, 2026-07-24** — after the 07-02 corpus window but
   before the story broke. Probably late-swarm rather than copycat; flagged either way.
 

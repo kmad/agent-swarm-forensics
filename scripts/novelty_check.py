@@ -33,6 +33,10 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 # appears inside an href is still a mention — the writeup links to it. The
 # tag-stripped ("visible") count is reported alongside for context; the two differ
 # exactly where a term appears in URLs but not prose.
+#
+# Substring caution: a short token can match inside an unrelated identifier. Any
+# low count (1-2) must be inspected by hand before it is trusted. `agentcounty`
+# is the worked example — see the entry below.
 TERMS: list[tuple[str, str, str]] = [
     ("mileshilliard", "NEW", "the failover counter provider"),
     ("langr5backup", "NEW", "the backup counter namespace"),
@@ -44,6 +48,11 @@ TERMS: list[tuple[str, str, str]] = [
     ("innerHTML", "NEW", ""),
     ("is.gd", "NEW", "custom-slug deposits"),
     ("macountyjson", "NEW", "vanderbi.lt slug"),
+    # Slug-precise: the bare token "agentcounty" gives 2 false positives, both the
+    # substring inside the page name dse~AgentCountyTransformNextJulyZ (href +
+    # title of one <a>). The shortener slug itself is in neither the writeup nor
+    # the corpus, so it IS new.
+    ("vanderbi.lt/agentcounty", "NEW", "vanderbi.lt slug (substring-safe form)"),
     ("CA5", "NEW", "the primary-counter answer key"),
     ("XX postal", "NEW", "the placeholder semantics"),
     ("max_client_conn", "NEW", "the saturation that forced failover"),
@@ -53,7 +62,6 @@ TERMS: list[tuple[str, str, str]] = [
     ("14061", "NEW", "DigitalOcean ASN"),
     ("tmcleod", "NEW", "named in the @j0wimo tweet, not the writeup"),
     # Already covered by the writeup — these MUST be non-zero.
-    ("agentcounty", "KNOWN", "do not claim as new"),
     ("vanderbi", "KNOWN", "host is named in the writeup"),
     ("counterapi", "KNOWN", "the primary counter provider"),
     ("pinggy", "KNOWN", "tunnels are documented"),

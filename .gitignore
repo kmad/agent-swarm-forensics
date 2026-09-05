@@ -18,3 +18,4 @@ __pycache__/
 
 # Cached third-party page, fetched on demand by novelty_check.py
 data/collusion-wiki-writeup.html
+.ruff_cache/

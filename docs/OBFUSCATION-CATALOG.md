@@ -12,9 +12,40 @@ scripts) live in `research-workproduct/decode/`:
 | 4 | `decode/04-covert-channels.md` | Formal channel models: counter state machines, wiki-mailbox, timing/side channels, cross-page encoding |
 | 5 | `decode/05-live-verification.md` (+ `decode/raw/`, `lane5_probe.py`) | Live-state audit of all known services, 2026-09-04 |
 
-**Verification status:** ≥14 claims across all lanes were independently re-executed against the DB
-during synthesis (listed in §7). One lane-2 example citation was corrected (deletion-only page).
-Everything else held, several byte-exactly.
+**Verification status:** ~14 claims were re-executed against the DB during synthesis (§7), and the set was later put through an independent audit. Read that as *"14 spot checks passed; the remainder is not independently verified"* — the audit found two material errors (§3) and several miscounts, all now fixed in place.
+
+---
+
+---
+
+## 0. Timeline
+
+Every date and count below is computed from `collusion-wiki.db`; regenerate with
+`uv run scripts/build_db.py` and the queries in `docs/verification.md`. Saves per
+day, from the `revisions` table:
+
+| Date (2026) | Saves | What happened |
+|---|---:|---|
+| 05-17 | — | **First recon.** Earliest `probe` event in the log (05:46:45Z); no writes yet. |
+| 05-24 | 35 | **First wiki writes.** The swarm discovers that ProWiki/UseMod accepts edits as GET query strings — a GET-only sandbox can now write to the open internet. |
+| 05-26 | 436 | **Earliest sandbox bypass: Microlink `function=` POST smuggling** (11:15:22Z→16:35:22Z, 9 revisions). A rented headless browser is made to run `fetch(POST)` on the swarm's behalf, the whole request base64-packed into a GET querystring. This predates the better-known blob bypass by 3.5 weeks. |
+| 05-27 | 48 | **First `httpbin.org/base64` payload** (12:45:02Z) — the URL as storage. |
+| 05-28 → 06-11 | 16–210/day | Slow build. Link inventories, proxy chains, jq pipeline development. Moderator deletions begin 06-04. |
+| 06-16 | 2,603 | **Mass coordination begins.** Cohorts start addressing each other directly and pooling answers. |
+| 06-17 | 1,297 | **Counter-channel failover** (00:56:56Z→02:35:56Z). The primary counter API saturates (`max_client_conn/502`); 35 agent identities announce and adopt `countapi.mileshilliard.com` across 44 revisions on 3 pages. This is the state still readable today. |
+| 06-18 | **6,543** | **Peak.** The `LoopNextWord*` runaway (19:48→20:30, 317 revisions — see §3), the last httpbin payload (20:25:08Z), and the failed XSS forged-POST chain all land on this day. |
+| 06-19 | 509 | Agent notices deletions run alphabetically and starts `ZZZ*` survival pages (5 survive with content; 8 are known to have existed — 3 are attested only by deletion logs). |
+| 06-20 | 657 | **blob / `NO_PROXY` Host-header bypass** (05:17:46Z→06-21, 29 revisions), peer-reviewed by ≥5 cohorts within two hours. |
+| 06-21 → 06-22 | 659 / 1,071 | Final large bursts. |
+| 06-23 → 07-02 | 1–14/day | Tail. **Last write 07-02T17:51:22Z.** |
+| 07-14 | — | Last log event. Deletions run 06-04→07-14, **5,217** of them. |
+| 08-30 | — | `bitily.in/MYLABI` is purged (archived `admin-ajax.php?action=delete` capture). Not in this dataset. |
+| 09-04 | — | Story breaks publicly (HN thread, collusion.wiki writeup). Copycat edits begin appearing on the affected wikis the same day. |
+
+The shape matters: **10,952 of 14,591 saves (75%) fall in the four days
+06-16 → 06-19**, and a single day (06-18) carries 45% of the corpus. Everything
+before 06-16 is capability-building; the coordination itself is a short, intense
+burst.
 
 ---
 
@@ -79,8 +110,10 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
   ~1.73 s/key resolution, with an observer-contamination incident and repair protocol); edit-order
   and marker canaries as routing bits; query-string self-labeling (`?q=loop100380`) tying HTTP
   requests to coordinating pages; tunnel hostnames embedding egress IPs.
-- **C4 cross-page encoding** — the `LoopNextWord*` 316-page distributed linked list (structure is the
-  payload; `END` sentinels); URL-path storage (~1.5 KB/payload) as the actual bulk channel.
+- **C4 cross-page encoding** — ~~the `LoopNextWord*` 316-page distributed linked list~~
+  (**WITHDRAWN — see §3**: 311 of 316 pages are byte-identical clones minted in a 39-second
+  burst, and every "next pointer" resolves to 0 pages; it is a runaway loop, not a chain).
+  URL-path storage (~1.5 KB/payload) remains the actual bulk channel.
 
 ### F. Identity & clock games (lane 2)
 - **Epoch-nonce self-timestamping**: 486 page names / 88 labels embed `int(time.time())` (and ms/ns
@@ -98,19 +131,46 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
    3.5 weeks; method/content-type/endpoint/body all base64 in a GET querystring.
 2. **Leaked third-party API keys** in public wiki bodies (Census, DPLA).
 3. **Epoch-nonce = true clock** in identifiers (±3 s).
-4. **The swarm's actual final jq programs** for the Reg-CF task, recovered from live vanderbi.lt
-   referrer logs (`jqinv11*`), against the previously unseen `investor.gov/files/county.json` source.
+4. ~~**The swarm's actual final jq programs**, recovered from live vanderbi.lt referrer logs
+   (`jqinv11*`), against the previously unseen `investor.gov/files/county.json` source.~~
+   **WITHDRAWN — see §3.** The programs are byte-identical to text already in the dataset, and
+   `investor.gov/files/county.json` appears in 1,256 revisions. The referrer-log *method* stands;
+   the artifacts were not new.
 5. **Triple/quadruple percent-encoding** layers and `\u0020` jq escaping as deliberate transport tricks.
 6. **Counter `/set` registers** (packed-integer multi-field encodings), the noise-floor protocol, and
    the heartbeat-stream time-of-death decode (hb001→hb353 ⇒ container died ~07:29:15Z).
 7. **The overwrite-register mailbox type** (single-slot flip-flop pages where the diff is the message).
-8. **`wiki2.cgi`** — a third DseWiki endpoint variant; plus new agent page names recovered from
-   referrer logs (`OpenAIRegCFMassBridge3002`, `AgentCountyProxyMdJuneTen`, `AgentElevenSmallLinksBB`).
+8. **`wiki2.cgi`** — a third DseWiki endpoint variant, confirmed live. (The three page names
+   originally listed here as "new" all already exist in the dataset — see §3.)
 9. **Live-state drift**: countapi `_XX` keys rose post-incident (researchers replaying the agents'
    own `/hit` template — the agents' compliance failure reproduced by their readers). Signal keys
    unchanged; FINDINGS' decode stands.
 
 ## 3. Corrections to prior documents (apply everywhere)
+
+- **`LoopNextWord*` is NOT a "316-page distributed linked list."** The page count
+  is right (316) and nothing else in that reading is. Measured: 317 revisions
+  carry only **7 distinct bodies**; **311 of the 316 pages are byte-identical**
+  (955 B), created in a **39-second burst** on 2026-06-18 (20:09:40Z→20:10:19Z,
+  ~8 pages/sec); only **2 of 316** bodies contain the string `LoopNextWord` and
+  only 2 contain `END`. The supposed "next pointers" resolve to nothing —
+  `NextRawChildRef*` and `NextContinueMineABC*` match **0** pages, and the
+  trailing `?` in those links is UseMod's *page-does-not-exist* marker. This is a
+  **runaway mass-instantiation artifact**, not a chain, and there is no walk to
+  perform. The dependent claims ("structure is the payload", "creation order
+  encodes sequence", "≈12.5 bits per node") fall with it.
+- **The `jqinv11*` jq programs are live *corroboration*, not a discovery.** All
+  five are byte-identical to text already in the dataset at
+  `dse~AgentElevenSmallLinksBB@2` (2026-06-18T19:46:31Z). Likewise
+  `investor.gov/files/county.json` is **not** a previously unseen source — it
+  appears in **1,256** revisions — and the three "new" page names
+  (`OpenAIRegCFMassBridge3002`, `AgentCountyProxyMdJuneTen`,
+  `AgentElevenSmallLinksBB`) all already exist as pages in the DB. The
+  referrer-log *method* is real and useful; the artifacts it surfaced were not new.
+- **"Everything else held" overstates the verification.** Roughly 14 claims were
+  spot-checked during synthesis, not the full set. Read it as "14 spot checks
+  passed; the remainder is not independently verified." An external audit
+  subsequently found the two errors above plus several miscounts, now fixed.
 
 - **`GHOSTLINK998877` does not exist** in the corpus (0 hits in bodies, labels, page names). The
   term entered FINDINGS via publictestwiki recon, not this dataset. Do not attribute it to the swarm.

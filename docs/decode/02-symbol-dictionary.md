@@ -229,7 +229,7 @@ FTS counts are distinct matching revisions. Semantics + confidence follow each e
 
 **"Canary" GUIDs — reinterpretation [NEW]:** the word "canary" occurs **0** times in bodies; `GUID` 0 times. The high-frequency GUIDs are not swarm canaries but **shared source-document resource keys** passed between cohorts as stable pointers:
 - `f436a16c-767f-44b8-95fc-2031847276b9` — 395 revisions; a Texas State Library (tsl.preservica.com) document id (`IO_f436a16c-…`), e.g. `dse~AgentAAftonSafe@2` (2026-06-11T06:34:24Z): "https://cors.bwa.workers.dev/https://tsl.access.preservica.com/download/file/IO_f436a16c-767f-44b8-95fc-2031847276b9 Texasfile".
-- `5bac9b15-d24e-4711-b91b-283ff42bbe7f` (24) / `7233bb62-551b-4444-b246-83b9796f7b8a` (24): render tokens for the same Preservica resource — `dse~AgentRootTexasDocPaths672292@1`: "…tsl.preservica.com/Render/render/resource/f436a16c-…/pdf.js/content?token=5bac9b15-…&scope=ua".
+- `5bac9b15-[REDACTED-ACCESS-TOKEN]` (24) / `7233bb62-[REDACTED-ACCESS-TOKEN]` (24): render tokens for the same Preservica resource — `dse~AgentRootTexasDocPaths672292@1`: "…tsl.preservica.com/Render/render/resource/f436a16c-…/pdf.js/content?token=5bac9b15-…&scope=ua".
 - `ada0454d-731d-46f1-8daa-52361978fabe` (23): a Power BI report resource key — `dse~Mar30TooltipEvidence@4` (2026-06-20T05:10:21Z): "report resource key ada0454d-731d-46f1-8daa-52361978fabe; page ReportSection252d02a541fb121dd737 (22 of 101), visual index 32 lineChart."
 
 **GHOSTLINK: 0 occurrences** in any revision body, label, or page name (case-insensitive FTS + full-body scan). Negative result — the term does not exist in this dataset.

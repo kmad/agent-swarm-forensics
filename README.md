@@ -34,8 +34,16 @@ Each claim below is verified as absent from the writeup by
 | **ASN attribution of the egress fingerprint** | The dataset's 198 `/16` prefixes are **73.7% Azure** — but the list is an *observation record*, not an inventory, and matching on it produces false negatives. | `origin.asn` **[0]**, `16509` **[0]** |
 
 Deliberately **not** claimed as new — the writeup already covers them:
-`counterapi` [2], `pinggy` [12], `vanderbi.lt` [1], `agentcounty` [2],
-`publictestwiki` [5], `texteditors` [2], `Azure` [18], `DigitalOcean` [7].
+`counterapi` [2], `pinggy` [12], `vanderbi.lt` [1], `publictestwiki` [5],
+`texteditors` [2], `Azure` [18], `DigitalOcean` [7].
+
+**A caveat on the method itself.** A short search token can match inside an
+unrelated identifier, so any low count must be inspected by hand. `agentcounty`
+is the worked example: it counts 2 in the writeup, which looked like "already
+known" — but both hits are the substring inside the page name
+`dse~AgentCountyTransformNextJulyZ`, and the shortener slug appears in neither
+the writeup nor the corpus. An independent audit caught it. The check now tests
+the slug-precise form, and the lesson is in the script's comments.
 
 ### The honest headline
 
@@ -82,11 +90,13 @@ scripts/
   decode_httpbin.py    extract + decode all 7 base64 payloads, optionally re-fetch
   asn_attribute.py     resolve the 198 egress prefixes to owning networks
   verify_live.py       re-probe all live artifacts, compare to the 2026-09-04 baseline
+  timeline.py          regenerate the incident timeline + milestones from the DB
   redact.py            strip third-party credentials from corpus-derived text
 
 docs/
   FINDINGS.md          the main findings, with evidence and negatives
-  OBFUSCATION-CATALOG.md  synthesis of the five decode lanes
+  VERIFICATION.md      what held, what broke, what stays unverified — read this
+  OBFUSCATION-CATALOG.md  synthesis of the five decode lanes (§0 = timeline)
   HTTPBIN-PAYLOADS.md  every base64 payload, decoded, with source pages
   ETHICS.md            read-only rules, refusals honoured, redaction policy
   decode/01..05        the five lane reports (encoding, symbols, code, channels, live)
@@ -103,11 +113,18 @@ data/                  gitignored; populated by fetch_dataset.py
 
 ## Reproducibility notes
 
-**The database rebuild is faithful.** `build_db.py` reproduces the figures the
-analyses depend on, checked against the researchers' own SQLite artifact:
-14,591 revisions, 4,579 pages, 19,913 events, and all **198** `/16` prefixes with
-an empty set difference. Note that the prefix table must union `revisions` *and*
-`events` — revisions alone yields 191.
+**The database rebuild is faithful — with one documented gap.** `build_db.py`
+reproduces 14,591 revisions, 19,913 events, and all **198** `/16` prefixes with an
+empty set difference against the researchers' own SQLite artifact. (The prefix
+table must union `revisions` *and* `events`; revisions alone yields 191.)
+
+The gap is the `pages` table. The published `pages.jsonl` carries **4,579** rows —
+the pages with surviving revisions — while the researchers' artifact has **5,825**.
+The extra 1,246 are pages attested only by deletion/event logs, with no surviving
+content, and they are not in the public export. So *revision*-level results
+reproduce exactly, while *page*-level counts can run lower here than in the
+writeup. Worked example: `ZZZ*` deletion-survival pages count **5** in this
+rebuild and **8** upstream. Prefer revision-level queries where it matters.
 
 **Live state drifts, by design.** The `_XX` counter keys climb as readers replay
 the agents' own `/hit` URL; between 2026-09-04 and 2026-09-05 they moved 4→7 and
@@ -122,15 +139,23 @@ distribution as approximate; the 73.7% Azure share is stable.
 gated behind an `HTTP 402 "Bot Check"` that also blocked the Internet Archive's
 crawler, so it is recorded as **unassessed**. See [`docs/ETHICS.md`](docs/ETHICS.md).
 
+**Several claims did not survive review.** An independent audit of this work found
+two material errors — the `LoopNextWord` "linked list" and the `jqinv11`
+"discovery" — plus a handful of miscounts and one false-positive novelty verdict.
+All are corrected in place and logged, with the direction of each error, in
+[`docs/VERIFICATION.md`](docs/VERIFICATION.md). Read that before citing anything
+here.
+
 ---
 
 ## Credentials and conduct
 
-The agents pasted **real third-party API keys** (US Census ×5, DPLA ×1) into
-public wiki pages. Those belong to whoever registered them. They are redacted
+The agents pasted **real third-party API keys** into public wiki pages — 4 US
+Census keys, 1 DPLA key, and 1 UNCTAD subscription key, plus 48 Preservica
+access tokens. Those belong to whoever registered them. They are redacted
 throughout this repository — described by class, count, and location so the
-finding stays verifiable, but not reproduced in usable form. Content hashes that
-merely *look* like keys are deliberately preserved.
+finding stays verifiable, but not reproduced in usable form. Content hashes and document resource ids that merely
+*look* like keys are deliberately preserved.
 
 Every live probe here is a read-only `GET`. The counter API's `/hit` and `/set`
 endpoints are never called: incrementing them would destroy the evidence for

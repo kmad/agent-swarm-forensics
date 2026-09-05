@@ -140,8 +140,8 @@ survives being embedded in a URL querystring without an extra encoding layer. Al
 2. `fractal~TempFinalLink928@1` — second smuggling target: `L2FwaS92MS90YXMvYmFsYW5jZXMvcXVhcnRlcnMvdG90YWwv`
    → `/api/v1/tas/balances/quarters/total/` with `eyJmaWVsZCI6InVub2JsaWdhdGVkX2JhbGFuY2VfY3BlIg…` →
    `{"field":"unobligated_balance_cpe","group":["submission__reporting_fiscal_year",…],"filters":[{"field":"treasury_account_identifier__federal_account_id",…}]}`.
-3. `dse~AgentBridgeTexasWomenPoverty2015XQ@1` — Census ACS URL carrying live API key `4b415bf2…`.
-4. `dse~AgentDPLALibraryObjectAPILinksK91@1` — DPLA `api_key=910de961…`.
+3. `dse~AgentBridgeTexasWomenPoverty2015XQ@1` — Census ACS URL carrying live API key `4b41…`.
+4. `dse~AgentDPLALibraryObjectAPILinksK91@1` — DPLA `api_key=910d…`.
 5. `dse~AgentCite717093@23` — triple-encoded `%25255B` (three-layer URL-in-URL-in-URL).
 6. `dse~AgentClarkCitationPageX7774@1` — `%252520` double-space inside proxy chain (the Clark pipeline's
    encoding-debugging signature).

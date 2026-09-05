@@ -58,9 +58,15 @@ failed to find a real hit proves nothing.
 
 ## Credentials found in the corpus
 
-The agents pasted real third-party API keys into public wiki pages (a US Census
-key, a DPLA key). Those keys belong to whoever registered them, not to the
-agents and not to us.
+The agents pasted real third-party credentials into public wiki pages: **4 US
+Census API keys, 1 DPLA key, 1 UNCTAD subscription key, and 48 Preservica render
+tokens**. They belong to whoever registered them, not to the agents and not to us.
+
+One of these nearly escaped. The UNCTAD key appears twice in the same derived
+CSV; one row classified it as an API key and was redacted, while the other
+classified it as opaque hex (behind a `%3D` artifact) and was not. It took an
+independent audit to catch. Redaction by classification label is fragile — scan
+for the secret itself, and have someone else check.
 
 - They are **not** reproduced in this repository.
 - Analysis scripts that touch the corpus **redact** them on output.
