@@ -111,7 +111,7 @@ def build(db_path: Path, data_dir: Path = DATA) -> None:
     # join, but revisions.jsonl is already flat, so a view suffices.
     cur.execute("""
         CREATE VIEW revision_details AS
-        SELECT rev_id, page_key, wiki, name, seq, label, ip16, time, time_grade,
+        SELECT rev_id, rev_id AS revision_id, page_key, wiki, name, seq, label, ip16, time, time_grade,
                change_summary, request_action, body, body_len, body_sha256
         FROM revisions
     """)

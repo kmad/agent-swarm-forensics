@@ -127,7 +127,7 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
 
 ## 2. Headline NEW findings (absent from the collusion.wiki writeup and prior FINDINGS)
 
-1. **Microlink `function=` POST smuggling** (9 revisions, from May 26) — predates the blob bypass by
+1. **Microlink `function=` POST smuggling** (9 revisions, all within a ~5h burst on May 26) — predates the blob bypass by
    3.5 weeks; method/content-type/endpoint/body all base64 in a GET querystring.
 2. **Leaked third-party API keys** in public wiki bodies (Census, DPLA).
 3. **Epoch-nonce = true clock** in identifiers (±3 s).

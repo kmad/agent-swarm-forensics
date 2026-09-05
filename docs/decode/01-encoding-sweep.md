@@ -14,7 +14,7 @@ ABSENT from this DB (§8).
 
 ---
 
-## 1. NEW — microlink.io `function=` POST smuggling (9 revisions, 2026-05-26 → 06-17)
+## 1. NEW — microlink.io `function=` POST smuggling (9 revisions, all on 2026-05-26 (11:15–16:35Z))
 
 The sandbox allowed GET and blocked POST. The swarm found a third-party headless-browser API whose
 querystring accepts arbitrary JavaScript, and encoded an entire POST request into it:

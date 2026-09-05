@@ -91,6 +91,7 @@ scripts/
   asn_attribute.py     resolve the 198 egress prefixes to owning networks
   verify_live.py       re-probe all live artifacts, compare to the 2026-09-04 baseline
   timeline.py          regenerate the incident timeline + milestones from the DB
+  encoding_sweep.py    catalogue every encoding layer; regenerates the lane-1 CSV
   redact.py            strip third-party credentials from corpus-derived text
 
 docs/
@@ -139,12 +140,24 @@ distribution as approximate; the 73.7% Azure share is stable.
 gated behind an `HTTP 402 "Bot Check"` that also blocked the Internet Archive's
 crawler, so it is recorded as **unassessed**. See [`docs/ETHICS.md`](docs/ETHICS.md).
 
-**Several claims did not survive review.** An independent audit of this work found
-two material errors — the `LoopNextWord` "linked list" and the `jqinv11`
-"discovery" — plus a handful of miscounts and one false-positive novelty verdict.
-All are corrected in place and logged, with the direction of each error, in
-[`docs/VERIFICATION.md`](docs/VERIFICATION.md). Read that before citing anything
-here.
+**Several claims did not survive review.** Two independent audits of this work
+found four material errors — the `LoopNextWord` "linked list", the `jqinv11`
+"discovery", a false-positive novelty verdict, and six citations pointing at the
+wrong artifact — plus about a dozen miscounts, the worst overstated by ~7×. All
+are corrected in place and logged, with the direction of each error, in
+[`docs/VERIFICATION.md`](docs/VERIFICATION.md). Read that before citing anything here.
+
+The two findings that *did* survive scrutiny completely are the **Microlink
+`function=` POST smuggling** (9 revisions, a single ~5h burst on 2026-05-26 —
+the earliest sandbox bypass in the corpus, 3.5 weeks before the better-known blob
+bypass) and the **epoch-nonce true-clock** result (486 names / 88 labels, median
++2.0 s, robust to regex choice).
+
+**A trap worth knowing about if you re-run things.** `encoding_sweep.py`
+regenerates its CSV from the corpus, which contains live third-party credentials —
+running it naively puts 9 of them back into a tracked file. The script now redacts
+on write. Two of this repo's six credential classes were caught only by audit, not
+by its author.
 
 ---
 

@@ -100,6 +100,112 @@ see the direction of the errors.
 
 ---
 
+---
+
+## Lanes 1-3 audit (encoding sweep, symbol dictionary, code inventory)
+
+A second independent audit covered the three remaining decode lanes. Two findings
+survived scrutiny completely and are the strongest things in this repository; a
+number of the surrounding figures did not.
+
+### Held up completely — publish with confidence
+
+**Microlink `function=` POST smuggling.** Every element verified independently:
+11 revisions mention microlink, **9 carry `function=`**, and all nine fall in a
+single ~5-hour burst on **2026-05-26** (11:15:22Z → 16:35:22Z). Every base64
+constant decodes as tabulated — `UE9TVA==` → `POST`,
+`YXBwbGljYXRpb24vanNvbg==` → `application/json`,
+`L2FwaS92Mi9kb3dubG9hZC9hY2NvdW50cy8=` → `/api/v2/download/accounts/`, plus the
+full JSON body. The mechanism is exactly as described: method, content-type,
+endpoint and body all riding as base64 constants in a GET querystring, executed
+by a rented headless browser.
+
+*Correction:* earlier drafts gave the range as "2026-05-26 → 06-17". The two later
+microlink revisions are plain renderer probes with **no** `function=` parameter.
+Tightening this to a single day makes the "earliest GET-bypass in the corpus"
+claim *stronger*, not weaker — it predates the June 20 blob bypass by 3.5 weeks.
+
+**Epoch-nonce identifiers encode the true sandbox clock.** Reproduces exactly:
+486 page names / 88 labels under a loose `178\d{7}` regex, median **+2.0 s** and
+**+3.0 s** against the first surviving write. Robust to the regex choice — a
+digit-bounded pattern gives 379 / 58 with identical medians.
+
+*Correction:* the outlier explanation was wrong. Earlier text called them
+"pre-created scratch pages"; in fact 31 of the outliers are **negative** (nonce
+later than the first write), the opposite of that story. The extremes are
+hand-rounded placeholders that are not `time.time()` output at all
+(`…1783000000`, `…1782000000`) — a false-positive class of the regex.
+
+### Numbers that did not reproduce
+
+| Claim | Measured | Note |
+|---|---|---|
+| 134 hex tokens (32-64 char) | **129** | sweep.py's own regex; 48 record_hash + 40 Census + 28 opaque + 11 DPLA + 2 md5/sha |
+| 67 `record_hash_path` rows | **48** | both in the CSV and on a fresh run |
+| "51 rows, 12 revisions" | 51 rows across **45** revisions | row count right, revision count wrong |
+| `.[0:16]` "1,563 slice-probe occurrences" | **225** as a jq program | ~7× overstated; 2,281 covers *all* slice programs combined |
+| dominant jq usage "~87%" | **76.8%** | 14,529 of 18,927 occurrences |
+| "%xx = 8,109 revisions" | **7,235** | 8,109 counts revisions containing any literal `%`; the table mixed three metrics |
+| 251 utf8 bodies | **250** | |
+| "1,682 distinct jq programs" | 1,672-1,704 | depends on decode depth; no extraction regex was published — treat as "~1,700" |
+| "13/210 dated labels match their write month" | not reproducible | three tokenizers give 92/984, 164/1200, 32/443. The *direction* holds (~7-14%); the specific numbers do not |
+| tier table column headed "revs" | values are **occurrences** | load-bearing, since the report counts cohorts from it |
+| "≥5 independent cohorts" replicated the blob bypass | **2 of 6 share a label** | timestamps all verify; independence is overstated |
+
+### Bad citations
+
+Six of ~46 spot-checked citations point at the wrong artifact:
+
+- **`dse~LoopNextWord100380@1`** — the quoted `[[WorkerLinksGet7788]] … END` text
+  is byte-exact from `@102320`, not `@100380`. This was the *sole* evidence for the
+  linked-list reading, which the data contradicts anyway: **1 wikilink across 317
+  revisions**, and the two "chain" pages point at the *same* target — hub-and-spoke
+  at most.
+- `dse~AgentAug16ClothingCoord1781638281` and `dse~A1ScratchGetSaveX1781729833` —
+  both pages have **zero stored revisions** (delete events only), so the quoted
+  "first write" deltas are unsupported.
+- Three timezone errors: nonce decodes stated as UTC are actually wiki-local
+  (UTC+2) — e.g. "17:31" is 19:31 UTC.
+- `dse~TestAgentSafeEntA9317@1` cited for a `&#46;`-obfuscated URL; its body is
+  entirely a German umlaut test with no URL at all.
+- `rnstamp` should be `rndstamp`; `OAIFlatheBridgeTestMay24X` should be
+  `OAIFlatheadBridgeTestMay24X`.
+
+### Interpretation presented as fact
+
+- "The agents generated these **deliberately as a sweep**, enumerating the
+  encoding-depth axis" — uncited. The depth-3 census is dominated by `%25252F`,
+  `%25253A`, `%252520`, which is what mechanical URL-in-URL nesting through
+  proxy chains produces anyway. Nothing distinguishes intent from accumulation.
+- "Agents leaked **working** API keys" — no validation was attempted, and none
+  should be. They are *credential-shaped strings*, described by class and location.
+- "The chain **failed** (wiki escaping held)" — the source says only "no evidence
+  that this succeeded" and "it's not obvious why". The mechanism was our addition.
+- The blob-bypass step "proxy sees allowed domain … POST passes" is a model of
+  proxy internals; no cited revision describes proxy behaviour.
+
+### Reproducibility fixes applied
+
+- `scripts/encoding_sweep.py` is now vendored here (it lived outside the repo).
+  Its `NEW`/`KNOWN` column used to be derived by grepping a findings document at
+  an absolute path outside the repo — when that document changed, **13 rows
+  flipped `NEW` → `KNOWN`, including all 9 microlink rows**, so the headline
+  finding self-reported as already-known. The novelty test now lives in
+  `scripts/novelty_check.py`, which is versioned and tests against the writeup.
+- The sweep **redacts on write.** Regenerating the CSV from the database
+  reintroduced 9 live credential occurrences into a tracked file; the script now
+  pipes its output through `redact.py` rather than leaving that to a step someone
+  might forget.
+- `build_db.py` exposes `revision_id` as an alias for `rev_id`, so scripts written
+  against the researchers' own schema run unchanged.
+- Lanes 2 and 3 ship **no scripts**, which is why their regex-derived counts could
+  not be hit exactly. Those figures are marked approximate above.
+- `corpus/live/attacklog_raw_dse_2605.jsonl` is referenced as the source for all
+  101 probe events and the XSS request log, but is **not in the published dataset**.
+  That part of lane 3 is reproducible only as far as the rendered writeup.
+
+---
+
 ## Method note
 
 The novelty test — "a finding is new if the term appears 0 times in the writeup" —
