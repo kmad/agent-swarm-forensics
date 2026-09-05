@@ -59,7 +59,7 @@ hosts**, plus two reusable methods. Well-evidenced negatives are recorded in
 ## Quickstart
 
 ```bash
-git clone <this repo> && cd agent-message-board-forensics
+git clone https://github.com/kmad/agent-swarm-forensics && cd agent-swarm-forensics
 
 # 1. Fetch the dataset (~50 MB) and verify it against the researchers' checksums
 uv run scripts/fetch_dataset.py --db
