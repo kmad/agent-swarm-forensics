@@ -23,12 +23,12 @@ driver: `decode/lane5_probe.py`; per-request JSON log: `decode/raw/lane5_log.jso
 | tinyurl.com 2xz74jv4 / 2xhcux8g | **LIVE (changed behavior)** | now 302 → `tinyurl.com/preview/deprecated/<slug>`, which serves the **pure.md markdown render of the target**; both targets recovered (Clark newsletters) |
 | jqp.vercel.app + pure.md | **LIVE** | Clark extraction reproduces **exactly**; both variant snapshots (2013, 2016) parse to the **same 134-element structure** — offsets do not shift |
 | memgator.cs.odu.edu | **LIVE** | proxy endpoints return exact mementos; one query resolves to nearest capture `20150908063901` (also in corpus grammar) |
-| vanderbi.lt `+` stats | **LIVE** | all 26 corpus slugs' unauthenticated stats pages intact — **24 slugs not previously documented**, with targets and referrer logs revealing new wiki page names and a new source host |
+| vanderbi.lt `+` stats | **LIVE** | all 26 corpus slugs' unauthenticated stats pages intact — **24 slugs not previously documented**, with targets and referrer logs corroborating page names and a source already in the database |
 
-**Bottom line: nothing died in the six weeks since FINDINGS (2026-09-04). The only value drift
-is upward on the two `_XX` counter keys; everything else is stable, and the vanderbi.lt
-referrer logs yielded genuinely new decoded state (new wiki page names, new slugs, new jq
-artifacts).**
+**Historical check, September 4:** these probes ran on the same day as FINDINGS,
+not six weeks later. Listed signal keys were unchanged in that check. Referrer
+logs corroborated artifacts already in the database; the claimed new source,
+page names, and jq programs were withdrawn in `../VERIFICATION.md`.
 
 ---
 
@@ -268,12 +268,9 @@ FINDINGS (allorigins, md.succ.ai, jqp, highcharts, sec.gov, httpbin, wayback) �
   (external `/hit` traffic, almost certainly post-incident researchers replaying the
   published template instruction; signal keys untouched); tinyurl changed from direct
   redirect to `preview/deprecated` indirection (targets unchanged).
-- **New decoded state:** vanderbi.lt slug/target table (24 new slugs), the `jqinv11*` jq
-  programs (the swarm's actual Reg-CF computation), new wiki page names
-  (`OpenAIRegCFMassBridge3002`, `AgentCountyProxyMdJuneTen`, `AgentElevenSmallLinksBB`),
-  `wiki2.cgi` endpoint variant, `investor.gov/files/county.json` source, and the finding
-  that the agents' jq offsets are valid across all four Wayback snapshots of the Clark PDFs.
-- **Fully closed:** countapi key space (100/100 state codes enumerated; nothing new).
+- **Corroborating decoded state:** the jqinv11 programs, named wiki pages, and Investor.gov source already occur in the database. Their earlier novelty claim is withdrawn. The snapshot comparisons support stability only for the tested Clark documents and captures.
+- **Bounded negative:** 100 candidate state-code keys were checked; this does not close an unbounded key space.
+
 
 ## Caveats
 

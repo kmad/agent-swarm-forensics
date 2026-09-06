@@ -39,7 +39,7 @@ Task-family tokens (the DataUSA/IHME/OECD occupational & health families, matchi
 Infrastructure/behavior tokens: `Bridge` 563, `Links`/`Link` 279+178, `Live` 268 (rolling status threads), `Probe` 195, `Get`/`Save` 170+95 (the GET-save exploit itself is named), `Try` 171 (attempt variant), `Unique` 221 (anti-collision), `Final` 75, `Fresh` 64, `Prep` 52 (pre-computed answer prep), `Signal` 45, `Relay` 42, `Scout` 44, `Coord` 127, `Sequence` 67, `Fast` 56 (fast-tier cohorts), `Hub` 16, `Reader` 19, `Redirect`/`Redir` 55+13, `Proxy` 51, `Archive` 41, `Cohort` 35, `Collab` 20.
 
 Three infra families are effectively *named subsystems* [NEW-DETAIL; the writeup describes link-dumping but not these name families]:
-- `LoopNextWordNNNNNN` — 316 pages, all classified `page_family = loop-chain-infrastructure`; each is a node in a linked list of URL-mutation chains (`dse~LoopNextWord100380@1`: "* [[WorkerLinksGet7788]] * [https://wikiservice.at/dse/wiki.cgi?action=browse&id=WorkerLinksGet7788&lang=1 DirectWL] END" — each page links to the next, i.e. a distributed linked-list store).
+- `LoopNextWordNNNNNN` — 316 pages; 311 identical heads, with no stored cross-node references. The earlier linked-list interpretation is withdrawn. The WorkerLinksGet7788 quote belongs to `dse~LoopNextWord102320@1`, not 100380. See lane 4 C4.1 and `scripts/revision_audit.py`.
 - `Tmp*` — 304 pages, mostly `TmpA<n>...<178-epoch>` probe/append targets created seconds apart (e.g. `AgentAug09Override0_1781640719`, `AgentAug09Override1_1781640724`, `AgentAug09Override2_1781640728` — an incrementing override-slot series, one per ~5 s).
 - `Our*` — 45 pages, first-person-plural *shared* space: `OurEnglishHub/Links`, `OurDec27CoordTest`, `OurCookDataLinkX99281` — "our" is the swarm's possessive for jointly-owned pages [NEW: not in writeup].
 
@@ -66,13 +66,12 @@ Three infra families are effectively *named subsystems* [NEW-DETAIL; the writeup
 
 **The epoch nonce decodes the true sandbox clock [NEW — the strongest single result in this lane]:** for the 379 pages-with-revisions whose name embeds a `178\d{7}` nonce, the median delta between the decoded UTC instant and the page's first surviving revision is **+2.0 s** (331/379 within 10 minutes). The same holds for labels (58 with a 10-digit nonce, median **+3 s**; 3 with a 13-digit nonce, median +3 s; 6 names with 13-digit millis, median +2 s). So the 178… number is `time.time()` evaluated when the agent minted the name/label, in the sandbox's real clock — while the *date word in the same name is the believed random date*:
 
-- `dse~AgentAug16ClothingCoord1781638281` → 1781638281 = **2026-06-16**T17:31 UTC; name says "Aug16"; first write 2026-06-16T17:31:24Z (`+2 s`).
-- `dse~AgentApiLink1781637655867` → 2026-06-16T17:20:55.867; first write +2 s.
-- `dse~A1ScratchGetSaveX1781729833` → 2026-06-17T23:37:13.
-- Label `OpenAIHelper1781639209505` (13-digit ms) → 2026-06-16T19:46:49.505; first write 19:46:56Z.
-- 19-digit examples: `A2Research1781772069254935559` = `time.time_ns()` = 2026-06-18T08:41:09.254; `AgentHelper1781888228419944699` = 2026-06-19T16:57:08.419944699 (first write +2 s).
+- `dse~AgentAug16ClothingCoord1781638281` → 2026-06-16T19:31:21+00:00 (UTC). Deletion-only page; no stored first-write delta can be verified.
+- `dse~AgentApiLink1781637655867` → 2026-06-16T19:20:55.867000+00:00 (UTC). Milliseconds interpretation.
+- `dse~A1ScratchGetSaveX1781729833` → 2026-06-17T20:57:13+00:00 (UTC). Deletion-only page; no stored first-write delta can be verified.
+- `OpenAIHelper1781639209505` → 2026-06-16T19:46:49.505000+00:00 (UTC). Editor label; milliseconds interpretation.
 
-Two clock regimes therefore coexist inside single identifiers: **date-word = prompt-fiction, epoch-nonce = wall truth.** The 6 outlier nonces whose delta is large are pages minted long before their first surviving write (pre-created scratch pages).
+Two clock regimes therefore coexist inside single identifiers: **date-word = prompt-fiction, epoch-nonce = wall truth.** Large outliers do not establish pre-created scratch pages: the later audit found negative deltas and hand-rounded placeholders. See `../VERIFICATION.md`.
 
 ### 1.4 The `~2f`/`~5b` escaping convention (99 page_keys)
 
@@ -127,7 +126,7 @@ In practice: `Name := Prefix Task Role Date Nonce`, most slots optional; ~4,900 
 `Label := RolePrefix TaskToken DateWord? Suffix?`
 
 - **Role/verb census (case-insensitive substring):** `Agent` 1,082 · `Research` 984 · `Helper` 642 · `Researcher` 195 · `Scout` 153 · `Cook` 98 · `Archive` 96 · `Link` 87 · `Bridge` 83 · `Watcher` 78 · `Reader` 57 · `Test` 125 · `Prep` 39 · `Coord` 34 · `Probe` 27 · `Relay` 17 · `Live` 14 · `Sequence` 13.
-- **Date-word composition:** 1,052 labels (34%) contain a month token, overwhelmingly `Mon(dd)` mid-name: `AgentAug02Scout`, `AgentJan19Helper`, `A1Feb21Cashier`, `AgentOpenAIHelperOct15X991827`. **Only 13/210 labels whose month maps cleanly match the actual creation month; 197 mismatch — all actual writes in 2026-06 [NEW quantification].** The believed date is uniform across 12 months × ~30 days.
+- **Date-word composition:** 1,052 labels (34%) contain a month token, overwhelmingly `Mon(dd)` mid-name: `AgentAug02Scout`, `AgentJan19Helper`, `A1Feb21Cashier`, `AgentOpenAIHelperOct15X991827`. The earlier 13/210 match count was not reproducible; audited tokenizers give approximately 7–14% month matches. Neither an exact count nor a uniform date distribution is established.
 - **Suffix taxonomy:** 1,298 labels end in a digit; 294 end in `X`; 81 end `X<digits>`; 6 are ALL-CAPS slabs (`OAI7C97`, `A3R1781801558881960444`, `J26W3779271`).
 - **Epoch nonces in labels [NEW]:** 58 labels embed `178\d{7}` epoch-seconds, median +3 s before first write (e.g. `AgentLinkHelper1781634923` → 2026-06-16T18:35:23Z, first write +2 s; a burst of 8 `AgentLinkHelper17816384xx` labels spans 18:35–18:35:54Z — minted one after another); 3 labels with 13-digit millis; 19-digit `time.time_ns()` labels (`A3R1781801558881960444`, `AgentHelper1781888228419944699`, `FreshBot1781639210360150787`).
 - **Hex thread/instance IDs [NEW]:** a handful of labels share a hex fragment identifying a *thread/session*, not an individual: `4ffea` → `OpenAIThread4ffeaMar12`, `OpenAIThread4ffeaMar16`, `OpenAIThread4ffeaJun25`, `OAI4FFEApr17`, `OAI4FFEJul16Current`; `7c97` → `OAI7C97`, `OAI7C97Dec26`, `OAI7C97Nov18`, `OAI7C97Oct09`. In bodies these appear as cohort names ("4ffea cohort monitoring" — `dse~AgentAug11Live@1`). Different date-words + one shared hex id ⇒ one logical instance re-launched across believed dates, or a session id adopted by cooperating instances.
@@ -303,12 +302,12 @@ The `178…` epoch nonces (§1.3) are the *hard* clock evidence: believed date �
 
 **NEW in this lane:**
 1. **Epoch-nonce = true sandbox clock**: 658 page names / 58 labels embed `int(time.time())`/ms/ns nonces that decode to within a median 2–3 s of the first surviving write — the believed date-word and the true clock coexist in the same identifier.
-2. **Date-word mismatch quantified**: only 203/439 dated page names and 13/210 dated labels match the actual write month; believed years restricted to 2025–2028.
+2. **Date-word mismatch quantified**: month mismatch is common, but exact counts depend on tokenization; the 13/210 label figure is withdrawn (see verification record).
 3. **Blank labels (899) are 100% probier-specific** — an attribution artifact, not an anonymous class.
 4. **Bracket tokens `[PersonN]`/`[User4]` are dataset redaction tokens**, not agent opcodes (proof: "[pre-2026 line withheld]" bodies; same convention as `[Admin1]`).
 5. **"Canary GUIDs" are source-document resource keys** (Texas State Library Preservica `IO_/render` UUIDs; Power BI report keys), shared as stable pointers — the corpus never uses the word "canary".
 6. **`GHOSTLINK` does not exist** in the corpus (0 hits, all tables).
-7. **Named infra families**: `LoopNextWord*` (316-page distributed link-list), `Tmp*` (304 timed probe targets), `Our*` (swarm-possessive shared space).
+7. **Named infra families**: `LoopNextWord*` (316-page family dominated by identical route copies), `Tmp*` (304 timed probe targets), `Our*` (swarm-possessive shared space).
 8. **Full tier/cohort token census** (17s-tier 592, 22s-tier 453, 9m19/30s 375, 18m04 cohort 296, …) and the `<initial>/<later>` slash grammar.
 9. **Hex thread IDs** (`4ffea`, `7c97`) shared across labels = session/thread identity persisting across believed dates.
 10. **Marker-string census**: 1,134 occurrences / 242 distinct forms; epoch-derived markers (`Marker1781803661`) tie canaries to the same clock-nonce convention.

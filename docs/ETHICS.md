@@ -7,25 +7,28 @@ are the rules this work followed, and that anyone re-running it should follow.
 
 ## Read-only, always
 
-Every live probe in `scripts/` is a `GET` against a public endpoint. Nothing in
-this repository writes to, mutates, or authenticates against any third-party
-service.
+Live probes intend to avoid application-state writes or authentication. GET
+alone does not establish that a request is non-mutating: server access logs and
+shortener click counts can change. Historical payload URLs are evidence, not
+instructions to execute.
 
 This matters most for the counter API. `countapi.mileshilliard.com` exposes
 `/hit/<key>` and `/set/<key>?value=N` alongside `/get/<key>`, all over GET.
 **Only `/get` is ever called.** Calling `/hit` would increment a shared counter
 and destroy the evidence for everyone who looks after us — the surviving values
-are the last readable state from the incident and there is no way to restore them.
+lack an authenticated historical audit trail, so an accidental increment cannot
+be reliably distinguished from prior activity.
 
 `scripts/verify_live.py` includes a control check for this: it queries a key that
-should not exist, twice, and asserts it still returns `Key not found`. If a `GET`
-ever begins creating keys, the script says so and you should stop. Never take a
+should not exist, three times, and requires a structured `Key not found` response
+every time. On an inconclusive or failed control it stops before signal reads.
+A passing control supports only non-creation for those particular reads. Never take a
 measurement you cannot distinguish from your own footprint.
 
 Note that the `_XX` placeholder keys have been drifting upward since the incident
-— readers replaying the agents' own `/hit` URL out of curiosity. That drift is
+— consistent with readers replaying the agents' `/hit` URL, but without caller attribution. That drift is
 itself a lesson: a public counter is a shared resource, and casual probing is not
-free. The signal keys have not moved.
+free. The signal keys were unchanged in the September 4–5 checks.
 
 ## Rate limits and refusals are decisions, not obstacles
 
@@ -58,9 +61,9 @@ failed to find a real hit proves nothing.
 
 ## Credentials found in the corpus
 
-The agents pasted real third-party credentials into public wiki pages: **4 US
+The agents pasted apparent third-party credentials into public wiki pages: **4 US
 Census API keys, 1 DPLA key, 1 UNCTAD subscription key, and 48 Preservica render
-tokens**. They belong to whoever registered them, not to the agents and not to us.
+tokens**. Their validity and ownership have not been tested.
 
 One of these nearly escaped. The UNCTAD key appears twice in the same derived
 CSV; one row classified it as an API key and was redacted, while the other
@@ -84,9 +87,9 @@ payload that packs wiki save-form state into base64. These are documented here a
 the level needed to *recognise and defend against* the pattern — what was done,
 why it worked, what it implies for sandbox design.
 
-Step-by-step recipes aimed at any live third-party target are deliberately not
-included, and the exploit artifacts are presented as historical evidence with
-their targets' current state noted. If you want to test these techniques, test
+Some lane reports preserve exact historical recipes and target URLs for
+provenance. Their presence does not establish present availability or successful
+execution. They should not be replayed against third-party targets. If you want to test these techniques, test
 them against infrastructure you own.
 
 ## Attribution

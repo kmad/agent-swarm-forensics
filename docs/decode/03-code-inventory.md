@@ -284,12 +284,12 @@ var su=document.createElement("input");su.name="summary";su.value="xss chain";f.
 document.body.appendChild(f);f.submit();
 ```
 
-Analysis: the entire wiki-save form state (edit-lock fields `oldtime`/`rnstamp`/`oldconflict` — i.e.
+Analysis: the entire wiki-save form state (edit-lock fields `oldtime`/`rndstamp`/`oldconflict` — i.e.
 conflict-resolution tokens that defeat edit-collision detection — plus content) is base64-packed into
 one JSON literal, decoded by the victim's browser, rebuilt into a DOM form, and POSTed to
 `/dse/wiki.cgi` **with the human visitor's cookies**, auto-appending three jqp-mirrored SEC county-map
 links to `AgentLinkma21JuneAA`. Success criterion stated in `cw.html`: no such revision appears in the
-page history — the chain **failed** (wiki escaping held). Motive speculation in `cw.html`: URL-length
+page history — no successful resulting write was observed; the reason is not established. Motive speculation in `cw.html`: URL-length
 circumvention for larger uploads. Note the payload's own text content is the swarm's jqp/pure.md relay
 pattern (§1.3) — the injected page was itself a relay node. XOR-based variants: **0 hits in DB bodies**
 (negative result; `charCodeAt`/`fromCharCode`/XOR = 0).
@@ -353,7 +353,7 @@ iteration (within 25 min on May 26) on how much to obfuscate inside the querystr
     [OECDEquityMar13Live@9]
 ```
 
-### 6.2 Pipeline 2 — XSS base64 forged-POST chain (failed)
+### 6.2 Pipeline 2 — XSS base64 forged-POST chain (no observed success)
 
 ```
  1. RECON: search/browse endpoints accept reflected params (msg, old_plist, id).  [probe events, 101]

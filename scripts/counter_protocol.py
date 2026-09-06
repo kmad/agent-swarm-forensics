@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Recover the swarm's counter-failover protocol and decode the surviving state.
 
-On 2026-06-17 the swarm's primary signalling channel (api.counterapi.dev) began
-returning `max_client_conn/502` under its own polling load. Over 99 minutes,
-35 distinct agent identities announced and adopted a failover provider on the
-wiki. That provider's state is still readable today — the only surviving live
-channel state from the incident.
+Archived text reports primary-channel saturation and announces a backup provider.
+44 bodies match across 35 editor labels, but only three revisions introduce a
+line naming that provider. Labels are not authenticated identities. Counter
+values printed here are the September 4 baseline, not fresh observations.
 
     uv run scripts/counter_protocol.py            # protocol text + decode rules
     uv run scripts/counter_protocol.py --full     # every matching revision in full
@@ -16,6 +15,7 @@ Reproduces: 44 revisions, 3 pages, 2026-06-17T00:56:56Z -> 02:35:56Z, 35 labels.
 from __future__ import annotations
 
 import argparse
+import difflib
 import re
 import sqlite3
 import textwrap
@@ -39,11 +39,11 @@ KEY_PATTERNS = [
 
 # Live values as of the 2026-09-04 baseline, with the agents' own decoding rule.
 DECODE = [
-    ("langr5backup4813_CA", 4, 1, "real signal, strongest — California"),
+    ("langr5backup4813_CA", 4, 1, "above declared floor; highest observed count"),
     ("langr5backup4813_NM", 2, 1, "exceeds declared noise floor"),
     ("langr5backup4813_TX", 2, 1, "exceeds declared noise floor"),
-    ("construction_r5_aug11_NE", 1, 0, "real signal — Nebraska"),
-    ("construction_r5_aug11_OH", 0, 0, "created, never incremented"),
+    ("construction_r5_aug11_NE", 1, 0, "above declared floor; consistent with Nebraska"),
+    ("construction_r5_aug11_OH", 0, 0, "observed zero; prior history unknown"),
 ]
 
 
@@ -60,7 +60,7 @@ def main() -> int:
         print(f"Database not found at {DB}\nRun: uv run scripts/fetch_dataset.py --db")
         return 1
 
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(DB.as_uri() + "?mode=ro", uri=True)
     rows = con.execute(
         "SELECT time, label, wiki, name, body FROM revision_details "
         "WHERE body LIKE '%mileshilliard%' ORDER BY time"
@@ -75,16 +75,29 @@ def main() -> int:
     print("=" * 96)
     print("THE FAILOVER BURST")
     print("=" * 96)
-    print(f"  {len(rows)} revisions | {len(labels)} distinct agent identities | {len(pages)} pages")
+    print(f"  {len(rows)} revisions | {len(labels)} distinct editor labels | {len(pages)} pages")
     print(f"  window: {rows[0][0]} -> {rows[-1][0]}\n")
     for wiki, name in sorted(pages):
         n = sum(1 for r in rows if (r[2], r[3]) == (wiki, name))
         print(f"    {n:>3} revs  {wiki}:{name}")
         print(f"             https://collusion.wiki/explorer/page/{wiki}~{name}.html")
 
-    print("\n  NOTE: the live wiki pages are now empty — the moderator's deletion sweep")
-    print("  removed them, and this wiki exposes no action=history. The dataset is the")
-    print("  only surviving record of this text.")
+    columns = {row[1] for row in con.execute("PRAGMA table_info(revisions)")}
+    rid, base = ("rev_id", "diff_base") if "rev_id" in columns else ("revision_id", "diff_base_revision_id")
+    originals = {row[0]: row for row in con.execute(f"SELECT {rid}, {base}, body FROM revisions")}
+    introductions = []
+    for rev, prior, body in originals.values():
+        if "mileshilliard" not in body:
+            continue
+        old = originals[prior][2] if prior in originals else ""
+        delta = difflib.ndiff(old.splitlines(), body.splitlines())
+        if any(line.startswith("+ ") and "mileshilliard" in line for line in delta):
+            introductions.append(rev)
+    print(f"\n  {len(introductions)} revisions introduce provider text; other matches inherit it:")
+    for rev in sorted(introductions):
+        print(f"    {rev}")
+    print("\n  Excerpt headers identify the first matching saved body and its editor,")
+    print("  not necessarily the original author of every inherited or signed line.")
 
     print("\n" + "=" * 96)
     print("PROTOCOL TEXT (verbatim)")
@@ -101,7 +114,7 @@ def main() -> int:
                 print(wrap(flat))
 
     print("\n" + "=" * 96)
-    print("DECODING THE SURVIVING COUNTERS")
+    print("INTERPRETING THE SEPTEMBER 4 COUNTER BASELINE")
     print("=" * 96)
     print("""
   The agents published their own decoding rule, including an apology for
@@ -112,22 +125,22 @@ def main() -> int:
        other codes value>=1."
 
   'XX' is not an opcode — it is a placeholder for a US state postal code
-  ("XX postal"). Applying their rule to the live values:
+  ("XX postal"). Applying their rule to the September 4 baseline:
 """)
-    print(f"  {'key':<30} {'live':>5} {'floor':>6}  reading")
+    print(f"  {'key':<30} {'saved':>5} {'floor':>6}  reading")
     for key, live, floor, note in DECODE:
         print(f"  {key:<30} {live:>5} {floor:>6}  {note}")
 
     print("""
-  The wiki text independently confirms what the counters encode:
+  The archived wiki text also reports California (self-report, not score feedback):
 
       "R5 CONFIRMED by Sep01 cohort: California. Answer: California: 11.2%.
        Counter CA5. Signaled BEFORE final at server UTC 01:34:22."
           -- dse:LangR5SignalSep01
 
   Run `uv run scripts/verify_live.py --only counters` for today's values. The
-  _XX placeholder keys drift upward as readers replay the agents' own /hit
-  template; the signal keys have not moved.""")
+  baseline does not identify callers, date increments, or exclude later contamination.
+  Counter values alone do not authenticate a run or prove an answer correct.""")
 
     if args.full:
         print("\n" + "=" * 96)

@@ -75,8 +75,8 @@ Long-hex classification of 134 hex tokens:
   (`0425e097d5b70d84e73a3b20074f7b14de40a07b`), MDL challenge ids, one `aaaa…` filler test
   (`probier~NewPageX010@2`).
 
-Agents leaked working API keys (Census, DPLA) onto a public wiki — **NEW** (FINDINGS.md has zero
-`api_key` mentions). Some may be keys harvested from docs/examples; that determination is out of lane scope.
+Agents posted apparent Census and DPLA API keys onto a public wiki; validity was
+not tested. This is reported credential exposure, not a claim that the keys work. Some may be keys harvested from docs/examples; that determination is out of lane scope.
 
 ## 4. Layered percent-encoding (1,170 revisions)
 
@@ -103,7 +103,7 @@ survives being embedded in a URL querystring without an extra encoding layer. Al
 ## 6. NEW — character-level link battery (12 revisions)
 
 - **HTML entities (8 rows):** `&#46;` (.) `&#58;` (:) `&#37;` (%) `&#38;` (&) substituted into URLs —
-  e.g. `https://www.sec&#46;gov/files/county.json` (`dse~TestAgentSafeEntA9317@1`, `dse~AgentPrettyCounty002@1`).
+  e.g. `https://www.sec&#46;gov/files/county.json` (`dse~AgentPrettyCounty002@1`; the previous TestAgentSafeEntA9317 citation was an unrelated umlaut test).
 - **`dse~TestSeite@765`** (label `AgentReg92581403`) is a single revision containing a **labeled
   mutation battery** — each line a distinct URL-normalization edge case with its own nonce
   (`Entity890`, `Percent890`, `Upper890`, `NoWww890`, `HttpCounty890`…): scheme/registry/case/entity/

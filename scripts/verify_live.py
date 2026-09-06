@@ -17,6 +17,7 @@ for everyone who looks after us. See docs/ETHICS.md.
 from __future__ import annotations
 
 import argparse
+import uuid
 import json
 import re
 import ssl
@@ -89,26 +90,33 @@ def save(name: str, body: str) -> None:
     (OUT / name).write_text(body, encoding="utf-8")
 
 
-def probe_counters(do_save: bool) -> None:
+def probe_counters(do_save: bool) -> bool:
     print("\n## countapi.mileshilliard.com — the failover channel")
-    print("   (the only surviving live channel state from the incident)\n")
+    print("   (compare observations; values and callers are unauthenticated)\n")
     print(f"   {'key':<30} {'now':>6} {'2026-09-04':>11}  status")
 
-    # Control: GET must not create keys. If this ever returns a value, stop —
-    # the probe itself would be manufacturing the evidence.
-    ctrl = "zzz_control_key_do_not_create_99213"
-    _, body, _ = get(COUNTAPI.format(ctrl))
-    control_ok = "Key not found" in body
-    for _ in range(2):
-        _, body2, _ = get(COUNTAPI.format(ctrl))
-    control_ok = control_ok and "Key not found" in body2
+    # Check all three responses before touching any evidence keys. A failed or
+    # unavailable control is inconclusive, not proof that we created a key.
+    ctrl = "forensics_read_control_" + uuid.uuid4().hex
+    for attempt in range(3):
+        code, body, _ = get(COUNTAPI.format(ctrl) + f"?audit={uuid.uuid4().hex}")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError:
+            data = None
+        if code not in (200, 404) or not isinstance(data, dict) or data.get("error") != "Key not found" or "value" in data:
+            print(f"   STOP: missing-key control inconclusive on read {attempt + 1}; no signal keys queried.")
+            return False
 
     for key, baseline in COUNTER_BASELINE.items():
-        _, body, _ = get(COUNTAPI.format(key))
+        _, body, _ = get(COUNTAPI.format(key) + f"?audit={uuid.uuid4().hex}")
         if do_save:
             save(f"countapi_{key}.json", body)
         try:
-            now = json.loads(body).get("value")
+            data = json.loads(body)
+            now = data.get("value") if isinstance(data, dict) else None
+            if isinstance(now, bool) or not isinstance(now, (int, float)):
+                now = None
         except json.JSONDecodeError:
             now = None
         if now is None:
@@ -116,14 +124,14 @@ def probe_counters(do_save: bool) -> None:
         elif now == baseline:
             status = "unchanged"
         elif key in DRIFTING:
-            status = f"drift +{now - baseline} (expected: readers replay /hit)"
+            status = f"drift +{now - baseline} (cause unverified)"
         else:
             status = f"CHANGED +{now - baseline}  <-- signal key, investigate"
         print(f"   {key:<30} {str(now):>6} {baseline:>11}  {status}")
 
-    print(f"\n   GET is non-mutating: {'CONFIRMED' if control_ok else 'FAILED — STOP PROBING'}")
-    if not control_ok:
-        print("   A control key gained a value. Probing is contaminating the data.")
+    print("\n   Missing-key control passed three reads; no key creation was observed.")
+    print("   This does not establish that all GETs are non-mutating or authenticate existing counts.")
+    return True
 
 
 def probe_httpbin(do_save: bool) -> None:
@@ -136,8 +144,8 @@ def probe_httpbin(do_save: bool) -> None:
             save(f"httpbin_{name}.txt", body)
         ct = hdrs.get("Content-Type", "?")
         print(f"   {name:<22} {code:>4} {len(body):>6}  {ct}")
-    print("\n   content-type text/html + Access-Control-Allow-Origin: * is what made")
-    print("   this an executable payload host reachable by pure GET.")
+    print("\n   HTML can run scripts when rendered, subject to browser policies.")
+    print("   CORS controls cross-origin reads; it does not itself enable script execution.")
 
 
 def probe_shorteners(do_save: bool) -> None:
@@ -196,16 +204,16 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def probe_counterapi_dev() -> None:
-    print("\n## api.counterapi.dev — the PRIMARY channel (state permanently lost)\n")
+    print("\n## api.counterapi.dev — the PRIMARY channel (selected legacy endpoint status)\n")
     for label, url in [
-        ("v1 legacy", "https://api.counterapi.dev/v1/language-r5-signal-4813/XX5"),
+        ("v1 legacy", "https://api.counterapi.dev/v1/language-r5-signal-4813/XX5/"),
         ("v2 legacy", "https://api.counterapi.dev/v2/language-r5-signal-4813/XX5"),
         ("v2 control", "https://api.counterapi.dev/v2/test/test"),
     ]:
         code, body, _ = get(url)
         print(f"   {label:<12} HTTP {code}  {body[:120]}")
-    print("\n   v1 is retired (410) and v2 never received the legacy workspaces (404),")
-    print("   which is why countapi.mileshilliard.com is the only readable state left.")
+    print("\n   These responses describe only the queried endpoints at this time.")
+    print("   They do not establish permanent loss or the status of every workspace.")
 
 
 def main() -> int:
@@ -221,7 +229,8 @@ def main() -> int:
 
     run = args.only
     if run in (None, "counters"):
-        probe_counters(args.save)
+        if not probe_counters(args.save):
+            return 1
     if run in (None, "httpbin"):
         probe_httpbin(args.save)
     if run in (None, "shorteners"):

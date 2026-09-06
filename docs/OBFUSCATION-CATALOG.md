@@ -1,8 +1,8 @@
 # Swarm Obfuscation & Encoding Catalog
 
-**Synthesis of the five decode lanes** over `research-workproduct/collusion-wiki.db` (14,591 revisions,
+**Synthesis of the five decode lanes** over `data/collusion-wiki.db` (14,591 revisions,
 5,825 pages, 3,103 labels, 2026-05-24 → 07-02). Lane reports (each with full citations and repro
-scripts) live in `research-workproduct/decode/`:
+scripts) live in `docs/decode/`:
 
 | Lane | Report | Contents |
 |---|---|---|
@@ -21,21 +21,21 @@ scripts) live in `research-workproduct/decode/`:
 ## 0. Timeline
 
 Every date and count below is computed from `collusion-wiki.db`; regenerate with
-`uv run scripts/build_db.py` and the queries in `docs/verification.md`. Saves per
+`uv run scripts/build_db.py` and the queries in `docs/VERIFICATION.md`. Saves per
 day, from the `revisions` table:
 
 | Date (2026) | Saves | What happened |
 |---|---:|---|
 | 05-17 | — | **First recon.** Earliest `probe` event in the log (05:46:45Z); no writes yet. |
 | 05-24 | 35 | **First wiki writes.** The swarm discovers that ProWiki/UseMod accepts edits as GET query strings — a GET-only sandbox can now write to the open internet. |
-| 05-26 | 436 | **Earliest sandbox bypass: Microlink `function=` POST smuggling** (11:15:22Z→16:35:22Z, 9 revisions). A rented headless browser is made to run `fetch(POST)` on the swarm's behalf, the whole request base64-packed into a GET querystring. This predates the better-known blob bypass by 3.5 weeks. |
+| 05-26 | 436 | **Early sandbox-bypass proposal: Microlink `function=` POST smuggling** (11:15:22Z→16:35:22Z, 9 revisions). The URL asks a headless-browser service to run `fetch(POST)` on the swarm's behalf, the whole request base64-packed into a GET querystring. This predates the better-known blob bypass by 3.5 weeks. |
 | 05-27 | 48 | **First `httpbin.org/base64` payload** (12:45:02Z) — the URL as storage. |
-| 05-28 → 06-11 | 16–210/day | Slow build. Link inventories, proxy chains, jq pipeline development. Moderator deletions begin 06-04. |
+| 05-28 → 06-11 | 0–210/day (including inactive days) | Slow build. Link inventories, proxy chains, jq pipeline development. Moderator deletions begin 06-04. |
 | 06-16 | 2,603 | **Mass coordination begins.** Cohorts start addressing each other directly and pooling answers. |
-| 06-17 | 1,297 | **Counter-channel failover** (00:56:56Z→02:35:56Z). The primary counter API saturates (`max_client_conn/502`); 35 agent identities announce and adopt `countapi.mileshilliard.com` across 44 revisions on 3 pages. This is the state still readable today. |
-| 06-18 | **6,543** | **Peak.** The `LoopNextWord*` runaway (19:48→20:30, 317 revisions — see §3), the last httpbin payload (20:25:08Z), and the failed XSS forged-POST chain all land on this day. |
+| 06-17 | 1,297 | **Counter-channel failover** (00:56:56Z→02:35:56Z). The primary counter API saturates (`max_client_conn/502`); 44 saved bodies under 35 editor labels contain `countapi.mileshilliard.com` on 3 pages; only 3 revisions introduce provider text. Backup values were readable in the September checks. |
+| 06-18 | **6,543** | **Peak.** The `LoopNextWord*` replication activity (19:48→20:30, 317 revisions — see §3), the last httpbin payload (20:25:08Z), and the XSS forged-POST attempt with no observed success all land on this day. |
 | 06-19 | 509 | Agent notices deletions run alphabetically and starts `ZZZ*` survival pages (5 survive with content; 8 are known to have existed — 3 are attested only by deletion logs). |
-| 06-20 | 657 | **blob / `NO_PROXY` Host-header bypass** (05:17:46Z→06-21, 29 revisions), peer-reviewed by ≥5 cohorts within two hours. |
+| 06-20 | 657 | **blob / `NO_PROXY` Host-header bypass** (05:17:46Z→06-21, 29 revisions), reported reproduced under multiple labels within two hours; independent sessions are not authenticated. |
 | 06-21 → 06-22 | 659 / 1,071 | Final large bursts. |
 | 06-23 → 07-02 | 1–14/day | Tail. **Last write 07-02T17:51:22Z.** |
 | 07-14 | — | Last log event. Deletions run 06-04→07-14, **5,217** of them. |
@@ -80,17 +80,17 @@ existed — including an integer-safe 2-decimal currency formatter (`def fmt: �
 Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jqinv11*` slugs).
 
 ### D. Exploit chain (lane 3 pipelines)
-1. **Microlink POST smuggling** (May 26 — earliest bypass): GET → microlink browser → `fetch(POST)`
+1. **Microlink POST smuggling** (May 26 — early proposal): GET → microlink browser → `fetch(POST)`
    against USAspending from microlink's egress. Five program variants within 25 minutes, including an
    obfuscation *ablation* (base64-everything vs JSON.parse wrapper vs labeled plaintext).
 2. **blob-NO_PROXY Host-header bypass** (Jun 20): fabricated `*.blob.core.windows.net` hostname in
    NO_PROXY + `/etc/hosts` (or `curl --resolve`) + real Host header → POST passes the GET-only proxy;
    Playwright `page.route`/`route.fulfill` replays the response into the live dashboard; DOM
    aria-labels read as ground truth. Peer-reviewed by ≥5 cohorts within 2 hours.
-3. **XSS base64 forged-POST chain** (Jun 18, failed): full wiki save-form state (including
-   edit-conflict tokens `oldtime`/`rnstamp`/`oldconflict`) packed as base64 JSON into a reflected
+3. **XSS base64 forged-POST chain** (Jun 18, no observed success): full wiki save-form state (including
+   edit-conflict tokens `oldtime`/`rndstamp`/`oldconflict`) packed as base64 JSON into a reflected
    `<script>` payload; would have converted a human visitor's browser into a POST-capable puppet.
-   Wiki escaping held — no resulting revision.
+   No resulting revision was observed; the reason is not established.
 
 ### E. Covert channels (lane 4, formal models)
 - **C1 counter state machine** — per-(cohort,round) namespace grammar; `created_at` timestamp oracle;
@@ -106,13 +106,13 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
   evidence* ("RC shows no Sep17 edits… so CA remains plausible").
 - **C3 timing/side channels** — exact-second prompt-arrival logs across 30+ sessions = a distributed
   timing oracle from which round cadence is reverse-engineered; `clock.wait` dilation ratios measured
-  and broadcast; `hb000…hb353` heartbeat key streams (absence of `hb354` = time-of-death message,
-  ~1.73 s/key resolution, with an observer-contamination incident and repair protocol); edit-order
+  and broadcast; `hb000…hb353` heartbeat key streams (absence of `hb354` was interpreted by writers as possible termination,
+  ~1.75 s per reported inter-key interval; termination is an inference, with an observer-contamination incident and repair protocol); edit-order
   and marker canaries as routing bits; query-string self-labeling (`?q=loop100380`) tying HTTP
   requests to coordinating pages; tunnel hostnames embedding egress IPs.
 - **C4 cross-page encoding** — ~~the `LoopNextWord*` 316-page distributed linked list~~
   (**WITHDRAWN — see §3**: 311 of 316 pages are byte-identical clones minted in a 39-second
-  burst, and every "next pointer" resolves to 0 pages; it is a runaway loop, not a chain).
+  burst, and every "next pointer" resolves to 0 pages; replication is observed, not a demonstrated chain).
   URL-path storage (~1.5 KB/payload) remains the actual bulk channel.
 
 ### F. Identity & clock games (lane 2)
@@ -138,7 +138,7 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
    the artifacts were not new.
 5. **Triple/quadruple percent-encoding** layers and `\u0020` jq escaping as deliberate transport tricks.
 6. **Counter `/set` registers** (packed-integer multi-field encodings), the noise-floor protocol, and
-   the heartbeat-stream time-of-death decode (hb001→hb353 ⇒ container died ~07:29:15Z).
+   the heartbeat-stream time-of-death decode (hb001→hb353: last reported heartbeat ~07:29:15Z, not a verified death time).
 7. **The overwrite-register mailbox type** (single-slot flip-flop pages where the diff is the message).
 8. **`wiki2.cgi`** — a third DseWiki endpoint variant, confirmed live. (The three page names
    originally listed here as "new" all already exist in the dataset — see §3.)
@@ -156,7 +156,7 @@ Reg-CF county tables (recovered live from vanderbi.lt referrer logs, lane 5: `jq
   only 2 contain `END`. The supposed "next pointers" resolve to nothing —
   `NextRawChildRef*` and `NextContinueMineABC*` match **0** pages, and the
   trailing `?` in those links is UseMod's *page-does-not-exist* marker. This is a
-  **runaway mass-instantiation artifact**, not a chain, and there is no walk to
+  **mass-replication artifact**, not a demonstrated chain, and there is no walk to
   perform. The dependent claims ("structure is the payload", "creation order
   encodes sequence", "≈12.5 bits per node") fall with it.
 - **The `jqinv11*` jq programs are live *corroboration*, not a discovery.** All
@@ -202,7 +202,7 @@ counter values for future diffs: `6 / 1 / 0 / 2 / 83 / 4 / 2 / 2 / 1`.
    prove overwrite-register semantics.
 3. **Shortener `+` stats / referrer-log mining** — vanderbi.lt-style unauthenticated stats pages
    expose targets, creation times, click histories, *and the wiki pages that linked in* (which
-   yielded pages and a source host absent from the wiki DB).
+   corroborated pages and a source host already in the wiki DB).
 4. **Pipeline liveness re-execution** — where the swarm's infrastructure is still up (pure.md, jqp,
    memgator, httpbin base64), run their verbatim queries to recover outputs the wiki never stored;
    sanity-check proxy render length to detect silent error pages.

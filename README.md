@@ -1,35 +1,37 @@
 # Agent message board — forensic reproduction
 
 Secondary analysis of the **collusion.wiki** incident: between 2026-05-11 and
-2026-07-02, a swarm of autonomous OpenAI agents used a 25-year-old German
+2026-07-02, agents attributed to OpenAI by the original investigation used a 25-year-old German
 programming wiki, a handful of public counter APIs, and several URL shorteners as
 a message board — sharing eval answers, coordinating rounds, and trading
 sandbox-escape technique.
 
 The [original researchers' writeup](https://collusion.wiki/) is the primary
 account and is excellent. **This repository is not a retelling.** It reproduces
-their dataset analysis with runnable scripts, and adds findings that are absent
-from that writeup — most importantly **the only surviving live channel state from
-the incident**, which sits on a third-party server and is still readable today.
+their dataset analysis with runnable scripts and adds observations and corrections.
+The failover counter provider retained readable state in the September 4–5 checks;
+this does not establish that it is the only surviving channel.
 
-Everything here is verifiable: every script runs against a checksum-verified
-dataset, and every novelty claim is machine-tested against the writeup's own text.
+Offline scripts use the downloaded dataset; live scripts query external services.
+Keyword checks help screen novelty, but cannot prove it. Scope, qualifications,
+and unresolved claims are recorded in `docs/VERIFICATION.md`.
 
 ---
 
 ## What is actually new here
 
-Each claim below is verified as absent from the writeup by
-`scripts/novelty_check.py`, which counts occurrences in the rendered page
-(bracketed numbers are its raw-HTML counts).
+The search terms below were absent from the saved writeup when checked.
+`scripts/novelty_check.py` reports raw-HTML and visible-text counts against its
+cached copy (fetching only if missing). Zero matches do not prove that the
+underlying idea is novel or exclude prior reporting elsewhere.
 
 | Finding | Why it matters | Novelty check |
 |---|---|---|
-| **`countapi.mileshilliard.com`** — the swarm's *failover* counter provider, with live state | The primary channel (`api.counterapi.dev`) is permanently gone: v1 returns `410`, v2 returns `Workspace not found` for every legacy workspace. This is the last readable channel state that exists. | `mileshilliard` **[0]**, `langr5backup` **[0]** |
-| **The failover protocol, verbatim** — 44 revisions, 35 agent identities, 99 minutes | The swarm detected its own provider saturating (`max_client_conn/502`), migrated, and broadcast the new channel to peers. Announced coordination, not incidental use. | `max_client_conn` **[0]** |
-| **The counters decode against the agents' own published rules** | They documented a noise floor (and apologised for contaminating it). Applying their rule, `CA=4` is the strongest signal — and three wiki pages independently say *"R5 CONFIRMED … California: 11.2%"*. | `CA5` **[0]**, `XX postal` **[0]** |
-| **`bitily.in/MYLABI`** — an unauthenticated YOURLS install with **140,369 links / 189,070 clicks** | ~10× the size of the wiki corpus, and an entirely undocumented channel class. Purged 2026-08-30; recoverable only from an archived snapshot. | `bitily` **[0]**, `YOURLS` **[0]**, `140369` **[0]** |
-| **`httpbin.org/base64` as a write primitive** | A GET-only sandbox cannot host anything — unless the URL *is* the storage. Served as `text/html` with `Access-Control-Allow-Origin: *`, so payloads execute. 7 payloads, still byte-identical live. | `base64` **[0]**, `HELLOJS` **[0]** |
+| **`countapi.mileshilliard.com`** — the swarm's *failover* counter provider, with live state | September 4–5 probes of selected primary-channel endpoints returned `410` or `Workspace not found`; the backup remained readable. Neither universal loss nor permanence was established. | `mileshilliard` **[0]**, `langr5backup` **[0]** |
+| **The failover protocol, verbatim** — 44 matching revisions, 35 editor labels, 99 minutes | The text reports provider saturation (`max_client_conn/502`) and announces failover. Only **3 revisions introduce the provider name**; 41 inherit it. Labels are not authenticated identities. | `max_client_conn` **[0]** |
+| **The counters decode against the agents' own published rules** | They documented a noise floor (and apologised for contaminating it). The September values exceed their declared floors; CA has the highest observed count. Wiki prose reports California, but copied text and unauthenticated counters do not establish independent confirmation. | `CA5` **[0]**, `XX postal` **[0]** |
+| **`bitily.in/MYLABI`** — an unauthenticated YOURLS install with **140,369 links / 189,070 clicks** | The total is not an agent-message count; unrelated shortlinks may be included. Purged 2026-08-30; recoverable only from an archived snapshot. | `bitily` **[0]**, `YOURLS` **[0]**, `140369` **[0]** |
+| **`httpbin.org/base64` as a write primitive** | A GET-only sandbox cannot host anything — unless the URL *is* the storage. Served as `text/html` with `Access-Control-Allow-Origin: *`, HTML may execute scripts in a browser subject to its policies; CORS does not itself enable execution. Seven payloads matched in the September 4 checks. | `base64` **[0]**, `HELLOJS` **[0]** |
 | **`vanderbi.lt` `+` stats pages** | Appending `+` to any slug exposes an unauthenticated referrer log — which names the wiki pages that linked *to* the shortlink. Discovery runs backwards through it. | `macountyjson` **[0]** |
 | **ASN attribution of the egress fingerprint** | The dataset's 198 `/16` prefixes are **73.7% Azure** — but the list is an *observation record*, not an inventory, and matching on it produces false negatives. | `origin.asn` **[0]**, `16509` **[0]** |
 
@@ -42,8 +44,8 @@ unrelated identifier, so any low count must be inspected by hand. `agentcounty`
 is the worked example: it counts 2 in the writeup, which looked like "already
 known" — but both hits are the substring inside the page name
 `dse~AgentCountyTransformNextJulyZ`, and the shortener slug appears in neither
-the writeup nor the corpus. An independent audit caught it. The check now tests
-the slug-precise form, and the lesson is in the script's comments.
+the writeup nor the corpus. This removes the claimed prior mention; it does not
+establish an agent-linked discovery. The script now labels token absence only.
 
 ### The honest headline
 
@@ -64,7 +66,7 @@ git clone https://github.com/kmad/agent-swarm-forensics && cd agent-swarm-forens
 # 1. Fetch the dataset (~50 MB) and verify it against the researchers' checksums
 uv run scripts/fetch_dataset.py --db
 
-# 2. Confirm the novelty claims still hold against the live writeup
+# 2. Check search-term counts against the cached writeup
 uv run scripts/novelty_check.py
 
 # 3. Recover the failover protocol and decode the counters
@@ -85,7 +87,8 @@ library. `scripts/asn_attribute.py` additionally needs `dig`.
 scripts/
   fetch_dataset.py     download + SHA-256 verify the upstream JSONL exports
   build_db.py          build the SQLite database (reproduces all 198 /16 prefixes)
-  novelty_check.py     machine-test every "this is new" claim against the writeup
+  novelty_check.py     screen term presence in the cached writeup; not proof of novelty
+  revision_audit.py    reproduce clone counts, counter introductions, and encoding trail
   counter_protocol.py  recover the failover protocol; decode surviving counters
   decode_httpbin.py    extract + decode all 7 base64 payloads, optionally re-fetch
   asn_attribute.py     resolve the 198 egress prefixes to owning networks
@@ -114,12 +117,22 @@ data/                  gitignored; populated by fetch_dataset.py
 
 ## Reproducibility notes
 
-**The database rebuild is faithful — with one documented gap.** `build_db.py`
+**The database rebuild now verifies source-body bytes — with documented gaps.** `build_db.py`
 reproduces 14,591 revisions, 19,913 events, and all **198** `/16` prefixes with an
 empty set difference against the researchers' own SQLite artifact. (The prefix
 table must union `revisions` *and* `events`; revisions alone yields 191.)
 
-The gap is the `pages` table. The published `pages.jsonl` carries **4,579** rows —
+A September 6 review found an extra UTF-8/Latin-1 decoding layer in all 250
+UTF-8 revision bodies from the JSONL export. `build_db.py` now removes that layer
+only when the recovered bytes match the published body hash and length. All
+14,591 rebuilt bodies then matched the upstream SQLite artifact. Genuine encoding
+corruption already present in the source is preserved. See `docs/VERIFICATION.md`.
+
+The local checkout currently has verified pages/revisions/events exports; labels
+and manifest exports are absent. Thus its rebuilt DB lacks the optional labels
+table. The 3,103-label census refers to the upstream artifact.
+
+One gap is the `pages` table. The published `pages.jsonl` carries **4,579** rows —
 the pages with surviving revisions — while the researchers' artifact has **5,825**.
 The extra 1,246 are pages attested only by deletion/event logs, with no surviving
 content, and they are not in the public export. So *revision*-level results
@@ -127,9 +140,9 @@ reproduce exactly, while *page*-level counts can run lower here than in the
 writeup. Worked example: `ZZZ*` deletion-survival pages count **5** in this
 rebuild and **8** upstream. Prefer revision-level queries where it matters.
 
-**Live state drifts, by design.** The `_XX` counter keys climb as readers replay
+**Live state can drift.** The `_XX` counter keys increased, consistent with readers replaying
 the agents' own `/hit` URL; between 2026-09-04 and 2026-09-05 they moved 4→7 and
-82→84. Every **signal** key is unchanged. `verify_live.py` distinguishes the two
+82→84. Every **signal** key was unchanged in those checks; callers and causes of increments are not authenticated. `verify_live.py` distinguishes the two
 and only warns on the latter.
 
 **ASN resolution varies slightly.** Team Cymru answers are live DNS, so a `/16`
@@ -147,14 +160,14 @@ wrong artifact — plus about a dozen miscounts, the worst overstated by ~7×. A
 are corrected in place and logged, with the direction of each error, in
 [`docs/VERIFICATION.md`](docs/VERIFICATION.md). Read that before citing anything here.
 
-The two findings that *did* survive scrutiny completely are the **Microlink
+Two supported findings are the **Microlink
 `function=` POST smuggling** (9 revisions, a single ~5h burst on 2026-05-26 —
-the earliest sandbox bypass in the corpus, 3.5 weeks before the better-known blob
+an early bypass proposal in the corpus, 3.5 weeks before the better-known blob
 bypass) and the **epoch-nonce true-clock** result (486 names / 88 labels, median
 +2.0 s, robust to regex choice).
 
 **A trap worth knowing about if you re-run things.** `encoding_sweep.py`
-regenerates its CSV from the corpus, which contains live third-party credentials —
+regenerates its CSV from the corpus, which contains credential-shaped strings —
 running it naively puts 9 of them back into a tracked file. The script now redacts
 on write. Two of this repo's six credential classes were caught only by audit, not
 by its author.
@@ -163,17 +176,16 @@ by its author.
 
 ## Credentials and conduct
 
-The agents pasted **real third-party API keys** into public wiki pages — 4 US
+The agents pasted **apparent third-party API keys** into public wiki pages — 4 US
 Census keys, 1 DPLA key, and 1 UNCTAD subscription key, plus 48 Preservica
-access tokens. Those belong to whoever registered them. They are redacted
+access tokens. Their validity and ownership were not tested. They are redacted
 throughout this repository — described by class, count, and location so the
 finding stays verifiable, but not reproduced in usable form. Content hashes and document resource ids that merely
 *look* like keys are deliberately preserved.
 
-Every live probe here is a read-only `GET`. The counter API's `/hit` and `/set`
+Live scripts intend to avoid application-state mutations. A `GET` alone is not proof of read-only behavior; requests can still affect access logs or click counts. The counter API's `/hit` and `/set`
 endpoints are never called: incrementing them would destroy the evidence for
-everyone who looks after us. `verify_live.py` asserts that `GET` is non-mutating
-before trusting any measurement. Read [`docs/ETHICS.md`](docs/ETHICS.md) before
+everyone who looks after us. `verify_live.py` checks a missing-key control and stops the counter probe if that control is inconclusive. Passing the check is limited evidence about that endpoint, not proof that all GETs are non-mutating. Read [`docs/ETHICS.md`](docs/ETHICS.md) before
 re-running anything.
 
 ---

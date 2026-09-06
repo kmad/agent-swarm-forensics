@@ -16,7 +16,10 @@ tables (page_profiles, revision_fts, manifest_*) not needed here.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
+import os
+import tempfile
 import sqlite3
 import sys
 from pathlib import Path
@@ -86,7 +89,35 @@ def load(path: Path) -> tuple[list[str], list[dict]]:
     return cols, rows
 
 
-def build(db_path: Path, data_dir: Path = DATA) -> None:
+def normalize_revision_body(row: dict) -> dict:
+    """Recover source text only when its bytes match the published body hash.
+
+    The JSONL export adds one UTF-8-as-Latin-1 layer to 250 UTF-8 bodies.
+    Preserve genuine historical mojibake: do not decode further once the
+    recorded source hash matches. Refuse an unverified reconstruction.
+    """
+    encoding = row["body_encoding"]
+    text = row["body"]
+    for attempt in range(2):
+        try:
+            raw = text.encode(encoding)
+        except UnicodeError:
+            raw = None
+        if raw is not None and hashlib.sha256(raw).hexdigest() == row["body_sha256"]:
+            if len(raw) != int(row["body_len"]):
+                raise ValueError(f"Body length mismatch: {row['rev_id']}")
+            return {**row, "body": text}
+        if attempt == 0 and encoding in ("utf8", "utf-8"):
+            try:
+                text = text.encode("latin1").decode("utf8")
+            except UnicodeError:
+                break
+        else:
+            break
+    raise ValueError(f"Cannot recover hash-matching body: {row['rev_id']}")
+
+
+def _build(db_path: Path, data_dir: Path = DATA) -> None:
     if db_path.exists():
         db_path.unlink()
     con = sqlite3.connect(db_path)
@@ -98,6 +129,8 @@ def build(db_path: Path, data_dir: Path = DATA) -> None:
             print(f"  skip   {table:10} ({filename} not present)")
             continue
         cols, rows = load(src)
+        if table == "revisions":
+            rows = [normalize_revision_body(row) for row in rows]
         quoted = ", ".join('"' + c.replace('"', '""') + '"' for c in cols)
         cur.execute(f"CREATE TABLE {table} ({quoted})")
         placeholders = ",".join("?" * len(cols))
@@ -146,6 +179,18 @@ def build(db_path: Path, data_dir: Path = DATA) -> None:
     con.close()
     print(f"\n  wrote {db_path}  ({db_path.stat().st_size:,} bytes)")
     print(f"  revisions={n_rev:,}  distinct /16 prefixes={n_ip}")
+
+
+def build(db_path: Path, data_dir: Path = DATA) -> None:
+    """Publish only a completed build; preserve the existing DB on failure."""
+    fd, name = tempfile.mkstemp(prefix=".collusion-build-", suffix=".tmp", dir=db_path.parent)
+    os.close(fd)
+    candidate = Path(name)
+    try:
+        _build(candidate, data_dir)
+        os.replace(candidate, db_path)
+    finally:
+        candidate.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

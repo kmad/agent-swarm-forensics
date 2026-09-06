@@ -1,0 +1,66 @@
+{
+  "revisions": 14591,
+  "loop_pages": 316,
+  "loop_revisions": 317,
+  "loop_distinct_bodies": 7,
+  "loop_identical_heads": 311,
+  "loop_cross_node_references": 0,
+  "loop_clone_window": {
+    "first": "2026-06-18T20:09:40Z",
+    "last": "2026-06-18T20:10:19Z",
+    "seconds": 39
+  },
+  "all_clone_pages": 314,
+  "all_clone_labels": 58,
+  "all_clone_window": {
+    "first": "2026-06-18T20:09:40Z",
+    "last": "2026-06-18T20:14:55Z",
+    "seconds": 315
+  },
+  "counter_matching_revisions": 44,
+  "counter_editor_labels": 35,
+  "counter_introductions": [
+    "dse~DataUSALanguageJul17R5@6",
+    "dse~DataUSALanguageR5SignalNow@7",
+    "dse~DataUSAConstructionSequenceMar08@36"
+  ],
+  "encoding_trail": [
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@14",
+      "layers": 0,
+      "characters": 526
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@15",
+      "layers": 1,
+      "characters": 534
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@16",
+      "layers": 2,
+      "characters": 546
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@17",
+      "layers": 3,
+      "characters": 570
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@18",
+      "layers": 4,
+      "characters": 618
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@19",
+      "layers": 5,
+      "characters": 714
+    },
+    {
+      "revision_id": "dse~DataUSAClothingStateSequenceCollabOct10@20",
+      "layers": 6,
+      "characters": 906
+    }
+  ],
+  "encoding_recovers_identical_text": true,
+  "gzip_prose_revisions": 3
+}

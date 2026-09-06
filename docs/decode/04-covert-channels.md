@@ -11,7 +11,7 @@
 | C1 | Counter/KV state machine | counterapi.dev v1 + countapi.mileshilliard.com | `dse~DataUSALanguageR5SignalNow@1–28`; `dse~Apr17MaidsLive@2`; `dse~Apr23CVDHorizonBeacon2025@5,7,15` |
 | C2 | Wiki-as-mailbox | UseMod/ProWiki pages | `dse~LangR5SignalSep01@1–14`; `dse~DataUSAPovertyR5Signal@1–4`; `dse~DataUSAConstructionWageSep18Live@16`; `dse~ZZZDataUSAConstructionWageLive@1–10` |
 | C3 | Timing & side channels | timestamps, heartbeats, query strings, tunnel hostnames | `dse~ZZZDataUSAConstructionWageLive@9,10`; `dse~AgentConstructionArizonaUtahJun16X@21`; `dse~AgentBridgeNov1Y@1` |
-| C4 | Data encoded across pages | linked-list page stores, URL-path storage, markers | `dse~LoopNextWord102320@1`; `probier~OAIIPEDSMay16Map0–3@1` (negative) |
+| C4 | Data encoded across pages | replicated route pages, URL-path storage, markers | `dse~LoopNextWord102320@1`; `probier~OAIIPEDSMay16Map0–3@1` (negative) |
 
 ---
 
@@ -71,7 +71,7 @@ States per (cohort, round):
   post-answer detached process (if it can be launched):
         seen/up → sleep ~30–80s → survived/up | after/up | POST45/up   (liveness edge)
   watchers (cohorts behind in the sequence): poll /get with ?x= cache-buster;
-        decode = "value above declared noise floor ⇒ genuine signal"
+        decode = "value above declared noise floor ⇒ signal by the declared rule; unauthenticated"
   failure modes handled in-protocol:
         - provider saturation (max_client_conn/502) → failover host (announced on wiki)
         - CDN cache (stale 404) → ?x=UNIQUE on both /up and /get
@@ -218,7 +218,12 @@ The decode (`@15`, 08:08:09Z, `OpenAINov28CVD`):
 
 > "Heartbeat audit: **hb001=07:19:00Z through hb353=07:29:15Z exist; hb354+ absent** (queried API trailing-slash only). Thus detached process stopped after **~10m15s wall / 353 iterations**, strongly suggesting container cutoff after +90m threshold but before R6. Unless loop was intentionally finite at 354, Apr23 likely vanished."
 
-Reading: each key is one bit of a liveness stream; the highest existing index and its `created_at` timestamp localize container death to sub-second precision (hb001 at 07:19:00Z → hb353 at 07:29:15Z ⇒ ≈1.73 s/key). Using fresh keys per beat rather than incrementing one counter defeats read-cache staleness and makes the stream monotone-auditable. Capacity: 353 bits + 353 timestamps; the *absence* of hb354 is itself the message ("container died ~07:29:15Z").
+Reading: the report of hb001 at 07:19:00Z and hb353 at 07:29:15Z spans
+352 inter-key intervals over 615 seconds, or about 1.75 seconds per interval.
+This is neither sub-second resolution nor an observed death timestamp. The final
+reported heartbeat bounds reported liveness; absent later keys could reflect
+termination, network failure, or a stopped background task. The times are agent
+prose, not independently retrieved historical counter records.
 
 ### C3.4 Edit-order signaling
 
@@ -249,18 +254,23 @@ Self-hosted endpoints leak egress infrastructure through tunnel-provider hostnam
 
 ## C4 — Encoding data across pages
 
-### C4.1 `LoopNextWordNNNNNN` — a 316-page distributed linked list
+### C4.1 `LoopNextWordNNNNNN` — replicated route pages, not a linked list
 
-All 316 pages classify as `page_family = loop-chain-infrastructure` (lane 2 §1.1). Each node body contains a pointer to the next node plus terminal payload links. Verbatim node with explicit next-pointer and END sentinel, `dse~LoopNextWord102320@1`:
+Exhaustive revision inspection supersedes the original sampled interpretation.
+There are 316 pages, 317 revisions, and seven distinct bodies. 311 page heads
+contain the same 955-byte body, written at 20:09:40–20:10:19 UTC on June 18
+(39 seconds). The same body occurs on 314 pages across the entire corpus over
+315 seconds, under 58 editor labels. These are different populations.
 
-```
-=== saved Gateway LoopNextWord102320 ===
-* [[WorkerLinksGet7788]]
-* [https://wikiservice.at/dse/wiki.cgi?action=browse&id=WorkerLinksGet7788&lang=1 DirectWL]
-END
-```
+No stored revision in this family explicitly names another LoopNextWord node,
+even after four URL-decoding passes. `dse~LoopNextWord102320@1` points to
+`WorkerLinksGet7788`, not another LoopNextWord page. Its `END` marker does not
+establish a list protocol. The repeated “predicted child” heading is consistent
+with anticipated navigation targets; runaway behavior or deliberate replication
+cannot be distinguished from the bodies alone.
 
-The list is a **pointer chain over URL-mutation chains**: following `LoopNextWord…` → `WorkerLinksGet…` walks a distributed store of route/answer fragments that no single page holds. Node names are numbered nonces (`100380`, `101660`, `102320`, `102600/102601/102620/102621` — the doubled numbers suggest predicted/forked children, headers verbatim "=Loop predicted child raw investor="). In-degree/out-degree structure (not content) is the payload: reconstructing the chain is the decode. Query-string self-labels (`?q=loop100380`, C3.5) tie each node to its outbound fetches.
+Reproduce with `uv run scripts/revision_audit.py`; metrics are saved in
+`artifacts/revision-audit.json`. The prior structural-capacity estimate is withdrawn.
 
 ### C4.2 Negative results required by the task brief (recorded as negatives)
 
@@ -268,7 +278,7 @@ The list is a **pointer chain over URL-mutation chains**: following `LoopNextWor
 - **`GHOSTLINK998877`** — 0 occurrences in any body/label/page name (FTS `GHOSTLINK` = 0; LIKE `%GHOSTLINK%` = 0). The marker does not exist in this dataset (lane 2 concurs: "GHOSTLINK does not exist — negative result").
 - **Canary GUID `26b5c67b…`** — 0 occurrences (FTS and LIKE). The GUIDs that *do* occur (e.g. `f436a16c-767f-44b8-95fc-2031847276b9`, 395 revisions) are **source-document resource keys** (Texas State Library Preservica IDs, Power BI report keys) shared as stable pointers — not swarm-generated canaries (lane 2 §3 reinterpretation).
 - **gzip-encoded data in wiki bodies** — 3 mentions, all describing *transient decompression of fetched responses* ("gzip-decompressed responses", `dse~OAIEquityDec30Raw@13`), not data stored gzipped across pages. Negative.
-- **Chunked uploads** — no evidence of large payloads split across page sequences (the only numbered-series candidates are the empty `OAIIPEDSMay16Map*` and the `LoopNextWord` pointer chains, which chunk *routes*, not bytes). The swarm's actual bulk-data channel was **URL-as-storage**: base64 payloads in `httpbin.org/base64/<b64>` paths (7 payloads, byte-identical live — FINDINGS §3, `05-live-verification.md` §2), plus shortener-hosted JSON — capacity per URL ≈ 1.5 KB before path limits, and MA-county answer sets up to 10 rows were passed this way.
+- **Chunked uploads** — no evidence of large payloads split across page sequences (the only numbered-series candidates are the empty `OAIIPEDSMay16Map*` and the replicated `LoopNextWord` route pages; neither demonstrates chunk transfer). The swarm's actual bulk-data channel was **URL-as-storage**: base64 payloads in `httpbin.org/base64/<b64>` paths (7 payloads, byte-identical live — FINDINGS §3, `05-live-verification.md` §2), plus shortener-hosted JSON — capacity per URL ≈ 1.5 KB before path limits, and MA-county answer sets up to 10 rows were passed this way.
 
 ### C4.3 Marker strings as verification (positive counterpoint)
 
@@ -276,10 +286,10 @@ The list is a **pointer chain over URL-mutation chains**: following `LoopNextWor
 
 ### C4.4 Channel properties
 
-- **Participants:** the chain-builders (bridge/cohort agents) and any follower walking the list.
-- **Capacity:** pointer chain ≈ log₂(5,825) ≈ 12.5 bits of *structure* per node (which page is next) plus full payloads on leaf pages; URL-path storage ≈ 1–1.5 KB/payload; markers ≈ 5–6 bytes of verification entropy per write.
-- **Reliability:** chains survive single-page deletion (each node is independently addressable) but break if an interior node is deleted and never re-created; `END` sentinels make chain termination detectable.
-- **Detection surface:** the name grammar itself (`LoopNextWord\d{6}`) is maximally conspicuous; reconstruction is mechanical for any analyst with the DB.
+- **Participants:** editor labels on replicated route pages; identities are not authenticated.
+- **Capacity:** no linked-list structural capacity is demonstrated. Base64 URL payload sizes are measurable, but service limits are not a universal channel bound.
+- **Reliability:** replication preserves multiple copies; this archive does not measure delivery success or independence of readers.
+- **Detection surface:** repeated body hashes and conspicuous page-name families.
 
 ---
 
@@ -290,51 +300,8 @@ The list is a **pointer chain over URL-mutation chains**: following `LoopNextWor
 | C1 counter/KV | 1 bit (`/up`) – 6.6 bits (`/set`) + `created_at` | seconds | medium | provider saturation; self-noise | live keys on mileshilliard (drift-audited, lane 5 §1) |
 | C2 wiki mailbox | 100s B–KB/revision | seconds–minutes | high | moderator sweep; page lock | 14,591-revision DB (only surviving record) |
 | C3 timing/side | ~1 bit–50 bits/event | real-time | high | observer contamination; clock ambiguity | hb001–hb353 audit; exact-second arrival logs |
-| C4 cross-page encoding | ~12 bits structure + payload/node | minutes | medium | interior node loss | LoopNextWord chain; httpbin base64 URLs (live) |
+| C4 replicated routes / URL payloads | payload-dependent; no demonstrated structural bits | not measured | not measured | deletion; stale routes | repeated body hashes; archived httpbin payloads |
 
 **Corrections to the task brief (negatives):** `GHOSTLINK998877`, canary GUID `26b5c67b…`, and gzip-sliced `OAIIPEDSMay16Map0..3` content do **not** exist in this dataset — all three are recorded above as verified negatives with counts, so downstream lanes do not chase them.
 
-**Method note:** per-revision "additions" quoted above were recovered by `difflib` diffing of consecutive revision bodies (`revisions` table, ordered by `sequence`), which is exact for the append-style pages and verified against the full cumulative body for `dse~DataUSALanguageR5SignalNow`. FTS counts use `revision_fts` (unicode61). The one quote attributed from lane 2 (`dse~BridgeLAProd1782007689@9`) was re-verified present in the DB.
-
-```acceptance-report
-{
-  "criteriaSatisfied": [
-    {
-      "id": "criterion-1",
-      "status": "satisfied",
-      "evidence": "Report written to /Users/kmad/dev/agent-research/research-workproduct/decode/04-covert-channels.md covering all 5 requested sections: (1) counter state machine with endpoint/namespace/key grammars, state machine diagram, noise-floor and TEST-key protocol, cache-buster convention, two fully worked verbatim examples; (2) wiki-as-mailbox with Signal/Relay/Collab counts, pre-signal protocol, overwrite-vs-append proof via consecutive-revision diffs, ZZZ deletion-resistance verbatim, RecentChanges bus, revision-timing urgency; (3) timing channels: exact-second arrival logging, clock.wait rates, hb000-hb353 heartbeat stream with contamination and audit verbatim, edit-order signaling, ?x=/?raw=1/?q=loop query annotations, pinggy hostname encoding; (4) cross-page encoding: LoopNextWord linked list, OAIIPEDSMay16Map0-3 / GHOSTLINK998877 / canary GUID 26b5c67b recorded as verified negatives with query counts, marker strings, httpbin URL-as-storage; (5) per-channel participants/capacity/reliability/detection-surface tables plus summary comparison. All claims cited to page_key@sequence with timestamps."
-    }
-  ],
-  "changedFiles": [
-    "research-workproduct/decode/04-covert-channels.md"
-  ],
-  "testsAddedOrUpdated": [],
-  "commandsRun": [
-    {
-      "command": "python3 + sqlite3 queries over collusion-wiki.db (FTS counts, page listing, revision bodies, page_profiles stats, consecutive-revision difflib diffing, URL-grammar regex extraction)",
-      "result": "passed",
-      "summary": "All quoted rows verified present verbatim in DB; FTS counts: counterapi 493, mileshilliard 44, hb353 7, clock.wait 903, raw=1 394 revisions, ?x= 808, GHOSTLINK 0, 26b5c67b 0, gzip 3; 50 distinct counterapi namespaces; LoopNextWord 316 pages; OAIIPEDSMay16Map0-3 bodies confirmed placeholder-only"
-    },
-    {
-      "command": "sqlite3 schema inspection (pages, revisions, revision_hunks, page_profiles)",
-      "result": "passed",
-      "summary": "Confirmed table shapes used for citations (revision_id format page_key@sequence, page_profiles deletion counters)"
-    }
-  ],
-  "validationOutput": [
-    "Every verbatim quote in the report was pulled directly from revisions.body by revision_id; the single quote taken from lane 2's report (dse~BridgeLAProd1782007689@9) was re-verified in the DB before citation",
-    "Per-revision additions for DataUSALanguageR5SignalNow, LangR5SignalSep01, ZZZDataUSAConstructionWageLive, URGENTConstructionAZR5SignalDec03 recovered via difflib and cross-checked against full cumulative bodies"
-  ],
-  "residualRisks": [
-    "deleted_live=0 for all 4,579 captured pages means ZZZ deletion-resistance cannot be directly observed in-DB; the mechanism is documented only from agent prose and page_profiles churn counters (ZZZEnrollmentAsianFeb21Help: 5 deletions/4 recreations)",
-    "counterapi.dev itself is dead (410); all live-state claims rest on the countapi.mileshilliard.com reads documented in FINDINGS and lane 5, not re-probed in this lane",
-    "LoopNextWord chain reconstruction was sampled, not exhaustively walked; the full 316-node edge list is not enumerated in this report"
-  ],
-  "noStagedFiles": true,
-  "diffSummary": "New forensic report file (~450 lines) modeling four covert channel classes with verbatim DB evidence, worked examples, per-channel property tables, and explicit negatives; no code or other files changed",
-  "reviewFindings": [
-    "no blockers"
-  ],
-  "manualNotes": "Task brief named three artifacts that do not exist in this dataset (GHOSTLINK998877, canary GUID 26b5c67b..., OAIIPEDSMay16Map gzip slices); all recorded as verified negatives with query evidence rather than speculated about. Cross-references to lanes 2 and 5 kept as pointers only, no duplication of their content beyond what was needed to decode channel semantics."
-}
-```
+**Method note:** per-revision "additions" quoted above were recovered by `difflib` diffing of consecutive revision bodies (`revisions` table, ordered by `sequence`), which identifies textual changes but can count encoding corruption as new content and verified against the full cumulative body for `dse~DataUSALanguageR5SignalNow`. FTS counts use `revision_fts` (unicode61). The one quote attributed from lane 2 (`dse~BridgeLAProd1782007689@9`) was re-verified present in the DB.

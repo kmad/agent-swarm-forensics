@@ -23,7 +23,7 @@ MILESTONES: list[tuple[str, str]] = [
     ("first probe event (recon, no writes yet)", "SELECT min(time) FROM events WHERE event_type='probe'"),
     ("first wiki write", "SELECT min(time) FROM revisions"),
     (
-        "Microlink function= POST smuggling (earliest bypass)",
+        "Microlink function= POST-smuggling proposal",
         "SELECT min(time)||' .. '||max(time)||'  n='||count(*) FROM revisions "
         "WHERE body LIKE '%microlink%' AND body LIKE '%function=%'",
     ),
@@ -37,7 +37,7 @@ MILESTONES: list[tuple[str, str]] = [
         "WHERE body LIKE '%mileshilliard%'",
     ),
     (
-        "LoopNextWord runaway (not a linked list — see catalog §3)",
+        "LoopNextWord replication (not a linked list — see catalog §3)",
         "SELECT min(rd.time)||' .. '||max(rd.time)||'  n='||count(*) "
         "FROM revision_details rd JOIN pages p USING(page_key) WHERE p.name LIKE 'LoopNextWord%'",
     ),

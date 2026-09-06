@@ -1,12 +1,54 @@
 # Verification record
 
-Every substantive claim in this repository was re-executed against the database by
-someone other than its author, and several did not survive. This file records what
+Earlier audits spot-checked claims and recorded several errors. They did not
+establish that every substantive claim was independently verified. This file records what
 held, what broke, and what remains unverified — including the errors, because a
 findings document without its error log is not evidence, it is advertising.
 
 Regenerate any figure below with the scripts in `scripts/`; the queries are given
 inline where they are short.
+
+---
+
+## September 6 follow-up review
+
+This pass used the local exports and the upstream SQLite snapshot already on
+disk; it did not re-query live services. Reproduce the revision metrics with
+`uv run scripts/revision_audit.py` (or `--db /path/to/upstream.db`), and the
+regression checks with `python3 -m unittest discover -s tests -v`.
+
+- **Importer correction:** the three locally present exports match their published
+  checksums, but 250 UTF-8 bodies in the JSONL-derived DB had one extra
+  UTF-8-as-Latin-1 layer relative to the upstream SQLite text. All stored body
+  hashes agreed, exposing the mismatch. The importer now accepts a repair only
+  if its bytes and length match those published fields. All **14,591 bodies and
+  hashes** match upstream after rebuilding. Builds replace the existing DB only
+  after successful completion. Labels and manifest exports are missing locally;
+  this rebuilt DB therefore does not contain the optional labels table.
+- **Two clone populations:** **311 LoopNextWord copies in 39 seconds** and
+  **314 corpus-wide copies in 315 seconds** are both correct. No stored
+  LoopNextWord revision names another node in that family. Repeated page
+  content does not prove either a linked list or intentional runaway behavior.
+- **Attribution:** 44 matching counter-provider bodies under 35 editor labels
+  contain only **3 provider-line introductions**, against their stored diff bases.
+  The other 41 inherit the text. This does not count independent announcers.
+- **Encoding lineage:** Oct10 revisions 14–20 preserve a single 526-character
+  paragraph through **six reversible corruption layers**. The JSONL importer bug
+  previously added a seventh layer to the last copy. These two sources of
+  corruption must not be conflated.
+- **Inference limits propagated:** counter floors do not authenticate callers;
+  last reported heartbeat is not a verified death time; unavailable endpoints
+  do not establish permanent loss; zero keyword matches do not prove novelty.
+  The hb001–hb353 span contains **352 intervals**, so 615 seconds gives about
+  **1.75 seconds/interval**, with no independently established death resolution.
+- **Code and output corrected:** novelty screening reports ABSENT/PRESENT against
+  its cached copy; the encoding CSV uses NOT_ASSESSED rather than self-referential
+  novelty labels. Counter controls now stop before evidence reads if any of three
+  structured missing-key responses fails. Mocked tests cover failure on every
+  control position and ensure main does not continue after failure.
+
+Metrics: [`artifacts/revision-audit.json`](../artifacts/revision-audit.json).
+Historical raw responses and the saved third-party writeup were left unchanged.
 
 ---
 
@@ -18,7 +60,7 @@ Re-run independently, matching to the digit:
 |---|---|
 | Corpus size: 14,591 revisions / 19,913 events / 3,103 labels / 4 wikis | identical |
 | Window 2026-05-24 → 07-02 (writes); events to 07-14 | identical |
-| Counter failover: 44 revisions, 35 distinct labels, 3 pages | identical |
+| Counter failover: 44 matching bodies, 35 editor labels, 3 pages; only 3 introductions | identical |
 | Failover window 2026-06-17T00:56:56Z → 02:35:56Z (99 min exactly) | identical |
 | All 8 verbatim protocol quotes present in the corpus | all found |
 | `httpbin.org/base64`: 7 distinct payloads across 17 revisions | identical |
@@ -35,7 +77,7 @@ Re-run independently, matching to the digit:
 | All 24 opcode FTS counts (XX 503, XX5 114, ACK 220, SEEN 383, ACTUAL 1082, TEST 1712, …) | 24/24 exact |
 | Epoch-nonce = true clock: 658 names, 379 with revisions, median **+2.0 s** | identical |
 | Workhorse jq program seen 1,519 times | identical |
-| Negative controls: gzip 0, `GHOSTLINK` 0, "canary" 0, `document.cookie` 0 | all 0 |
+| Negative controls: gzip payloads 0 (gzip prose in 3 revisions), `GHOSTLINK` 0, "canary" 0, `document.cookie` 0 | all 0 |
 
 ---
 
@@ -46,10 +88,10 @@ see the direction of the errors.
 
 | Claim as written | Reality | Where |
 |---|---|---|
-| `LoopNextWord*` is a "316-page distributed linked list" whose structure is the payload | **False.** 317 revisions hold only **7 distinct bodies**; 311 of 316 pages are byte-identical, minted in a **39-second burst** (2026-06-18 20:09:40Z→20:10:19Z, ~8/sec). Only 2 of 316 bodies contain `LoopNextWord`; `NextRawChildRef*` and `NextContinueMineABC*` resolve to **0** pages. A runaway loop, not a chain. | catalog §3 |
+| `LoopNextWord*` is a "316-page distributed linked list" whose structure is the payload | **False.** 317 revisions hold only **7 distinct bodies**; 311 of 316 pages are byte-identical, minted in a **39-second burst** (2026-06-18 20:09:40Z→20:10:19Z, ~8/sec). Only 2 of 316 bodies contain `LoopNextWord`; `NextRawChildRef*` and `NextContinueMineABC*` resolve to **0** pages. Replication is observed; a runaway loop is an interpretation, not established intent. | catalog §3 |
 | The `jqinv11*` jq programs were "recovered from live referrer logs" as new | **Corroboration, not discovery.** All five are byte-identical to `dse~AgentElevenSmallLinksBB@2` (2026-06-18T19:46:31Z), already in the dataset. | catalog §3 |
 | `investor.gov/files/county.json` was a "previously unseen source" | **False.** Appears in **1,256** revisions. | catalog §3 |
-| `vanderbi.lt/agentcounty` is already covered by the writeup (count 2) | **False positive.** Both hits are the substring inside the page name `dse~AgentCountyTransformNextJulyZ`. The slug is in neither the writeup nor the corpus. The finding *is* new. | `novelty_check.py` |
+| `vanderbi.lt/agentcounty` is already covered by the writeup (count 2) | **False positive.** Both hits are the substring inside the page name `dse~AgentCountyTransformNextJulyZ`. The slug is in neither the writeup nor the corpus. Token absence does not establish that the slug was agent-used or a new discovery. | `novelty_check.py` |
 | `918d6489…` is a 5th Census API key | **Not a key** — a 64-char hash in a `urlquery.net` path. True tally: 4 Census + 1 DPLA + 1 UNCTAD. | `ETHICS.md` |
 | httpbin payloads span 5 pages | **6** — `dse:AgentBridgeViaSearchAA9901` is the sixth. | `FINDINGS.md` |
 | Failover page split 24 / 17 / 3 | **22 / 19 / 3** | `FINDINGS.md` |
@@ -70,16 +112,16 @@ see the direction of the errors.
   posted from Azure and AWS 16 seconds apart. The site now serves a Cloudflare
   interstitial, so this could not be reproduced. Labelled unverified throughout.
 - **"Container died ~07:29:15Z"** from the `hb000`–`hb353` heartbeat stream. The
-  interval arithmetic checks out (615 s / 353 keys ≈ **1.74 s/key**, not the 1.73
+  interval arithmetic checks out (615 s / 352 intervals ≈ **1.75 s/interval**, not the 1.73
   originally stated), but the death time rests on one agent's own prose, and
-  `api.counterapi.dev` v1 is now `410 Gone` — permanently unverifiable.
-- **486 page names / 88 labels with epoch nonces.** A broad `17\d{8}` regex gives
-  801 / 92; a narrower valid-epoch filter would plausibly land near the stated
-  figure, but it was not independently reproduced.
+  `api.counterapi.dev` v1 is now `410 Gone` in the September checks; no live reconstruction was available then.
+- **Epoch-nonce populations depend on the regex.** The later lanes 1–3 audit below
+  supersedes this section’s earlier non-reproduction note; use its stated patterns
+  and do not combine counts from different tokenizers.
 - **The counter decode itself.** `CA=4` being the strongest signal is an inference
   from a 4-vs-2-vs-2 count on an unauthenticated, world-writable counter that has
-  a *documented contamination incident* and three months of post-publicity
-  exposure. The wiki prose independently says R5 = California, which is what makes
+  a *documented contamination incident* and roughly three months between the June writes and September observations, plus
+  exposure after the September 4 publication. The wiki prose also reports R5 = California, which is what makes
   the reading credible — not the counts alone.
 
 ---
@@ -117,13 +159,14 @@ constant decodes as tabulated — `UE9TVA==` → `POST`,
 `YXBwbGljYXRpb24vanNvbg==` → `application/json`,
 `L2FwaS92Mi9kb3dubG9hZC9hY2NvdW50cy8=` → `/api/v2/download/accounts/`, plus the
 full JSON body. The mechanism is exactly as described: method, content-type,
-endpoint and body all riding as base64 constants in a GET querystring, executed
-by a rented headless browser.
+endpoint and body all riding as base64 constants in a GET querystring for a
+headless-browser service. Decoding proves the proposed mechanism, not that the
+remote function executed successfully.
 
 *Correction:* earlier drafts gave the range as "2026-05-26 → 06-17". The two later
 microlink revisions are plain renderer probes with **no** `function=` parameter.
 Tightening this to a single day makes the "earliest GET-bypass in the corpus"
-claim *stronger*, not weaker — it predates the June 20 blob bypass by 3.5 weeks.
+date precede the June 20 blob bypass by 25 days; success is not proven by the URL.
 
 **Epoch-nonce identifiers encode the true sandbox clock.** Reproduces exactly:
 486 page names / 88 labels under a loose `178\d{7}` regex, median **+2.0 s** and
@@ -157,7 +200,7 @@ hand-rounded placeholders that are not `time.time()` output at all
 Six of ~46 spot-checked citations point at the wrong artifact:
 
 - **`dse~LoopNextWord100380@1`** — the quoted `[[WorkerLinksGet7788]] … END` text
-  is byte-exact from `@102320`, not `@100380`. This was the *sole* evidence for the
+  is byte-exact from `dse~LoopNextWord102320@1`, not `dse~LoopNextWord100380@1`. This was the *sole* evidence for the
   linked-list reading, which the data contradicts anyway: **1 wikilink across 317
   revisions**, and the two "chain" pages point at the *same* target — hub-and-spoke
   at most.
@@ -165,7 +208,7 @@ Six of ~46 spot-checked citations point at the wrong artifact:
   both pages have **zero stored revisions** (delete events only), so the quoted
   "first write" deltas are unsupported.
 - Three timezone errors: nonce decodes stated as UTC are actually wiki-local
-  (UTC+2) — e.g. "17:31" is 19:31 UTC.
+  (UTC+2) — e.g. a 17:31 UTC+2 display corresponds to 15:31 UTC (subtract two hours).
 - `dse~TestAgentSafeEntA9317@1` cited for a `&#46;`-obfuscated URL; its body is
   entirely a German umlaut test with no URL at all.
 - `rnstamp` should be `rndstamp`; `OAIFlatheBridgeTestMay24X` should be
@@ -208,8 +251,8 @@ Six of ~46 spot-checked citations point at the wrong artifact:
 
 ## Method note
 
-The novelty test — "a finding is new if the term appears 0 times in the writeup" —
-is useful but not self-validating. Two failure modes bit us:
+The term-absence test is a screening tool, not a novelty verdict. It does not
+cover synonymous descriptions or other reporting. Two failure modes bit us:
 
 1. **Substring collisions.** A short token matches inside an unrelated identifier.
    Any count of 1–2 must be inspected by hand; `agentcounty` above is the worked
